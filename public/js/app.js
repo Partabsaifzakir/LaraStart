@@ -14067,6 +14067,8 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_4_vue_router__["a" /* default */]);
 var routes = [{ path: '/dashboard', component: __webpack_require__(42) }, { path: '/profile', component: __webpack_require__(45) }, { path: '/Users', component: __webpack_require__(68) }];
 /*==========END ALL VUE COMPONENTS CODE==========*/
 
+window.Fire = new Vue();
+
 var router = new __WEBPACK_IMPORTED_MODULE_4_vue_router__["a" /* default */]({
     mode: 'history',
     routes: routes // short for `routes: routes`
@@ -50583,6 +50585,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         createUser: function createUser() {
             this.$Progress.start();
             this.form.post('api/user');
+            Fire.$emit('AfterUserCreated');
             $('#addNewUser').modal('hide');
             toast({
                 type: 'success',
@@ -50595,9 +50598,10 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         var _this2 = this;
 
         this.loadUsers();
-        setInterval(function () {
-            return _this2.loadUsers();
-        }, 3000);
+        Fire.$on('AfterUserCreated', function () {
+            _this2.loadUsers();
+        });
+        // setInterval(() => this.loadUsers(), 3000);
     }
 });
 
