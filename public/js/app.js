@@ -71795,98 +71795,129 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 
 /* harmony default export */ __webpack_exports__["default"] = ({
-    data: function data() {
-        return {
-            editmode: true,
-            users: {},
-            form: new Form({
-                name: '',
-                email: '',
-                password: '',
-                type: '',
-                bio: '',
-                photo: ''
-            })
-        };
+  data: function data() {
+    return {
+      editmode: true,
+      users: {},
+      form: new Form({
+        id: "",
+        name: "",
+        email: "",
+        password: "",
+        type: "",
+        bio: "",
+        photo: ""
+      })
+    };
+  },
+
+
+  /*==============ALL METHODS==============*/
+
+  methods: {
+    /*==============FOR OPENING NEW MODEL==============*/
+    newModel: function newModel() {
+      this.editmode = false;
+      this.form.reset();
+      this.form.clear();
+      $("#addNewUser").modal("show");
     },
 
-    methods: {
-        newModel: function newModel() {
-            this.editmode = false;
-            this.form.reset();
-            this.form.clear();
-            $('#addNewUser').modal('show');
-        },
-        editModel: function editModel(user) {
-            this.editmode = true;
-            this.form.reset();
-            this.form.clear();
-            $('#addNewUser').modal('show');
-            this.form.fill(user);
-        },
-        updateUser: function updateUser() {
-            console.log('Editing User......');
-        },
-        deleteUser: function deleteUser(id) {
-            var _this = this;
+    /*==============END FOR OPENING NEW MODEL==============*/
 
-            swal({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                type: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, delete it!'
-            }).then(function (result) {
+    /*==============FOR EDITING USER==============*/
+    editModel: function editModel(user) {
+      this.editmode = true;
+      this.form.reset();
+      this.form.clear();
+      $("#addNewUser").modal("show");
+      this.form.fill(user);
+    },
 
-                if (result.value) {
+    /*==============END FOR EDITING USER==============*/
 
-                    _this.form.delete('api/user/' + id).then(function () {
+    /*==============FOR UPDATING USER==============*/
+    updateUser: function updateUser() {
+      var _this = this;
 
-                        swal('Deleted!', 'Your file has been deleted.', 'success');
-                        Fire.$emit('AfterUserCreated');
-                    });
-                }
-            }).catch(function () {
-                swal("Failed!", "There was something wrong.", "warning");
-            });
-        },
-        loadUsers: function loadUsers() {
-            var _this2 = this;
+      this.$Progress.start();
+      this.form.put("api/user/" + this.form.id).then(function () {
+        Fire.$emit("RefreshTable");
+        $("#addNewUser").modal("hide");
+        toast({
+          type: "success",
+          title: "User Updated Successfully"
+        });
+        _this.$Progress.finish();
+      }).catch(function () {
+        swal("Failed!", "There was something wrong.", "warning");
+        _this.$Progress.fail();
+      });
+      // console.log('Editing User......');
+    },
 
-            axios.get('api/user').then(function (_ref) {
-                var data = _ref.data;
-                return _this2.users = data.data;
-            });
-        },
-        createUser: function createUser() {
-            var _this3 = this;
+    /*==============END FOR UPDATING USER==============*/
 
-            this.$Progress.start();
-            this.form.post('api/user').then(function () {
-                Fire.$emit('AfterUserCreated');
-                $('#addNewUser').modal('hide');
-                toast({
-                    type: 'success',
-                    title: 'User Created Successfully'
-                });
-                _this3.$Progress.finish();
-            }).catch(function () {});
+    /*==============FOR DELETING USER==============*/
+    deleteUser: function deleteUser(id) {
+      var _this2 = this;
+
+      swal({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, delete it!"
+      }).then(function (result) {
+        if (result.value) {
+          _this2.form.delete("api/user/" + id).then(function () {
+            swal("Deleted!", "Your user has been deleted.", "success");
+            Fire.$emit("RefreshTable");
+          });
         }
+      }).catch(function () {
+        swal("Failed!", "There was something wrong.", "warning");
+      });
     },
-    created: function created() {
-        var _this4 = this;
 
-        this.loadUsers();
-        Fire.$on('AfterUserCreated', function () {
-            _this4.loadUsers();
+    /*==============END FOR DELETING USER==============*/
+
+    /*==============LOADING USER==============*/
+    loadUsers: function loadUsers() {
+      var _this3 = this;
+
+      axios.get("api/user").then(function (_ref) {
+        var data = _ref.data;
+        return _this3.users = data.data;
+      });
+    },
+    createUser: function createUser() {
+      var _this4 = this;
+
+      this.$Progress.start();
+      this.form.post("api/user").then(function () {
+        Fire.$emit("RefreshTable");
+        $("#addNewUser").modal("hide");
+        toast({
+          type: "success",
+          title: "User Created Successfully"
         });
-        Fire.$on('AfterUserDeleted', function () {
-            _this4.loadUsers();
-        });
-        // setInterval(() => this.loadUsers(), 3000);
+        _this4.$Progress.finish();
+      }).catch(function () {});
     }
+  },
+  mounted: function mounted() {
+    var _this5 = this;
+
+    this.loadUsers();
+    Fire.$on("RefreshTable", function () {
+      _this5.loadUsers();
+    });
+
+    // setInterval(() => this.loadUsers(), 3000);
+  }
 });
 
 /***/ }),

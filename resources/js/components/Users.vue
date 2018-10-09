@@ -124,94 +124,119 @@
 </template>
 
 <script>
-    export default {
-        data(){
-            return{
-                editmode: true,
-                users: {},
-                form: new Form({
-                    name: '',
-                    email: '',
-                    password: '',
-                    type: '',
-                    bio: '',
-                    photo: ''
-                })
-            }
-        },
-        methods:{
-            newModel(){
-                this.editmode = false;
-                this.form.reset();
-                this.form.clear();
-                $('#addNewUser').modal('show');
-            },
-            editModel(user){
-                this.editmode = true;
-                this.form.reset();
-                this.form.clear();
-                $('#addNewUser').modal('show');
-                this.form.fill(user);
-            },
-            updateUser(){
-                console.log('Editing User......');
-            },
-            deleteUser(id){
-                swal({
-                    title: 'Are you sure?',
-                    text: "You won't be able to revert this!",
-                    type: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Yes, delete it!'
-                    }).then((result) => {
-                    
+export default {
+  data() {
+    return {
+      editmode: true,
+      users: {},
+      form: new Form({
+        id: "",
+        name: "",
+        email: "",
+        password: "",
+        type: "",
+        bio: "",
+        photo: ""
+      })
+    };
+  },
 
-                        if (result.value) {
-                            
-                            this.form.delete('api/user/'+id).then(() => {
+  /*==============ALL METHODS==============*/
 
-                                swal('Deleted!','Your file has been deleted.','success');
-                                Fire.$emit('AfterUserCreated');
-                            })
-                        }
-                    
-                })
-                .catch(() => {swal("Failed!", "There was something wrong.", "warning");})
-            },
+  methods: {
+    /*==============FOR OPENING NEW MODEL==============*/
+    newModel() {
+      this.editmode = false;
+      this.form.reset();
+      this.form.clear();
+      $("#addNewUser").modal("show");
+    },
+    /*==============END FOR OPENING NEW MODEL==============*/
 
-            loadUsers(){
-                axios.get('api/user').then(({ data }) => (this.users = data.data));
-            },
-            createUser(){
-                
-                this.$Progress.start();
-                this.form.post('api/user')
-                .then(() => {
-                    Fire.$emit('AfterUserCreated');
-                    $('#addNewUser').modal('hide');
-                    toast({
-                        type: 'success',
-                        title: 'User Created Successfully'
-                    });
-                    this.$Progress.finish();    
-                })
-                .catch(() => {
+    /*==============FOR EDITING USER==============*/
+    editModel(user) {
+      this.editmode = true;
+      this.form.reset();
+      this.form.clear();
+      $("#addNewUser").modal("show");
+      this.form.fill(user);
+    },
+    /*==============END FOR EDITING USER==============*/
 
-                })
-                
-            }
-        },
-        created() {
-            this.loadUsers();
-            Fire.$on('AfterUserCreated', () => {
-                this.loadUsers();
+    /*==============FOR UPDATING USER==============*/
+    updateUser() {
+      this.$Progress.start();
+      this.form
+        .put("api/user/" + this.form.id)
+        .then(() => {
+          Fire.$emit("RefreshTable");
+          $("#addNewUser").modal("hide");
+          toast({
+            type: "success",
+            title: "User Updated Successfully"
+          });
+          this.$Progress.finish();
+        })
+        .catch(() => {
+          swal("Failed!", "There was something wrong.", "warning");
+          this.$Progress.fail();
+        });
+      // console.log('Editing User......');
+    },
+    /*==============END FOR UPDATING USER==============*/
+
+    /*==============FOR DELETING USER==============*/
+    deleteUser(id) {
+      swal({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, delete it!"
+      })
+        .then(result => {
+          if (result.value) {
+            this.form.delete("api/user/" + id).then(() => {
+              swal("Deleted!", "Your user has been deleted.", "success");
+              Fire.$emit("RefreshTable");
             });
-            Fire.$on('AfterUserDeleted', () => {
-                this.loadUsers();
-            });
-            // setInterval(() => this.loadUsers(), 3000);
-        }
+          }
+        })
+        .catch(() => {
+          swal("Failed!", "There was something wrong.", "warning");
+        });
+    },
+    /*==============END FOR DELETING USER==============*/
+
+    /*==============LOADING USER==============*/
+    loadUsers() {
+      axios.get("api/user").then(({ data }) => (this.users = data.data));
+    },
+    createUser() {
+      this.$Progress.start();
+      this.form
+        .post("api/user")
+        .then(() => {
+          Fire.$emit("RefreshTable");
+          $("#addNewUser").modal("hide");
+          toast({
+            type: "success",
+            title: "User Created Successfully"
+          });
+          this.$Progress.finish();
+        })
+        .catch(() => {});
     }
+  },
+  mounted() {
+    this.loadUsers();
+    Fire.$on("RefreshTable", () => {
+      this.loadUsers();
+    });
+
+    // setInterval(() => this.loadUsers(), 3000);
+  }
+};
 </script>
