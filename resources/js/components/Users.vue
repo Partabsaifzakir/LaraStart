@@ -64,12 +64,13 @@
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="addNewUserTitle">Add New User</h5>
+                <h5 class="modal-title" v-show="!editmode" id="addNewUserTitle">Add New User</h5>
+                <h5 class="modal-title" v-show="editmode" id="updateUserTitle">Update User's Info</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-        <form @submit.prevent="createUser">
+        <form @submit.prevent="editmode ? updateUser() : createUser() ">
             <div class="modal-body">
                 <div class="form-group">
                   <input v-model="form.name" type="text" name="name" placeholder="Enter User Name"
@@ -110,8 +111,9 @@
             </div>
         
             <div class="modal-footer" style="justify-content: center; display: flex; align-items: center">
-                <button type="button" data-dismiss="modal" class="btn btn-default" style="background-color: white;"><i class="fa fa-times-circle fa-3x text-fade-red"></i></button>
-                <button class="btn btn-default" type="submit" style="background-color: white;"><i class="fa fa-check-circle fa-3x text-cyan"></i></button>
+                <button type="button" data-dismiss="modal" class="btn btn-default" style="background-color: transparent;"><i class="fa fa-times-circle fa-3x text-fade-red"></i></button>
+                <button v-show="!editmode" class="btn btn-default" type="submit" style="background-color: transparent;"><i class="fa fa-check-circle fa-3x text-green"></i></button>
+                <button v-show="editmode" class="btn btn-default" type="submit" style="background-color: transparent;"><i class="fa fa-check-circle fa-3x text-orange"></i></button>
             </div>
         </form>
 
@@ -125,6 +127,7 @@
     export default {
         data(){
             return{
+                editmode: true,
                 users: {},
                 form: new Form({
                     name: '',
@@ -138,13 +141,20 @@
         },
         methods:{
             newModel(){
+                this.editmode = false;
                 this.form.reset();
+                this.form.clear();
                 $('#addNewUser').modal('show');
             },
             editModel(user){
+                this.editmode = true;
                 this.form.reset();
+                this.form.clear();
                 $('#addNewUser').modal('show');
                 this.form.fill(user);
+            },
+            updateUser(){
+                console.log('Editing User......');
             },
             deleteUser(id){
                 swal({
@@ -175,6 +185,7 @@
                 axios.get('api/user').then(({ data }) => (this.users = data.data));
             },
             createUser(){
+                
                 this.$Progress.start();
                 this.form.post('api/user')
                 .then(() => {

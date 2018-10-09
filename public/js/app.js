@@ -71791,10 +71791,13 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
 
 /* harmony default export */ __webpack_exports__["default"] = ({
     data: function data() {
         return {
+            editmode: true,
             users: {},
             form: new Form({
                 name: '',
@@ -71809,13 +71812,20 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
     methods: {
         newModel: function newModel() {
+            this.editmode = false;
             this.form.reset();
+            this.form.clear();
             $('#addNewUser').modal('show');
         },
         editModel: function editModel(user) {
+            this.editmode = true;
             this.form.reset();
+            this.form.clear();
             $('#addNewUser').modal('show');
             this.form.fill(user);
+        },
+        updateUser: function updateUser() {
+            console.log('Editing User......');
         },
         deleteUser: function deleteUser(id) {
             var _this = this;
@@ -71995,7 +72005,43 @@ var render = function() {
           },
           [
             _c("div", { staticClass: "modal-content" }, [
-              _vm._m(1),
+              _c("div", { staticClass: "modal-header" }, [
+                _c(
+                  "h5",
+                  {
+                    directives: [
+                      {
+                        name: "show",
+                        rawName: "v-show",
+                        value: !_vm.editmode,
+                        expression: "!editmode"
+                      }
+                    ],
+                    staticClass: "modal-title",
+                    attrs: { id: "addNewUserTitle" }
+                  },
+                  [_vm._v("Add New User")]
+                ),
+                _vm._v(" "),
+                _c(
+                  "h5",
+                  {
+                    directives: [
+                      {
+                        name: "show",
+                        rawName: "v-show",
+                        value: _vm.editmode,
+                        expression: "editmode"
+                      }
+                    ],
+                    staticClass: "modal-title",
+                    attrs: { id: "updateUserTitle" }
+                  },
+                  [_vm._v("Update User's Info")]
+                ),
+                _vm._v(" "),
+                _vm._m(1)
+              ]),
               _vm._v(" "),
               _c(
                 "form",
@@ -72003,7 +72049,7 @@ var render = function() {
                   on: {
                     submit: function($event) {
                       $event.preventDefault()
-                      return _vm.createUser($event)
+                      _vm.editmode ? _vm.updateUser() : _vm.createUser()
                     }
                   }
                 },
@@ -72241,7 +72287,64 @@ var render = function() {
                     )
                   ]),
                   _vm._v(" "),
-                  _vm._m(2)
+                  _c(
+                    "div",
+                    {
+                      staticClass: "modal-footer",
+                      staticStyle: {
+                        "justify-content": "center",
+                        display: "flex",
+                        "align-items": "center"
+                      }
+                    },
+                    [
+                      _vm._m(2),
+                      _vm._v(" "),
+                      _c(
+                        "button",
+                        {
+                          directives: [
+                            {
+                              name: "show",
+                              rawName: "v-show",
+                              value: !_vm.editmode,
+                              expression: "!editmode"
+                            }
+                          ],
+                          staticClass: "btn btn-default",
+                          staticStyle: { "background-color": "transparent" },
+                          attrs: { type: "submit" }
+                        },
+                        [
+                          _c("i", {
+                            staticClass: "fa fa-check-circle fa-3x text-green"
+                          })
+                        ]
+                      ),
+                      _vm._v(" "),
+                      _c(
+                        "button",
+                        {
+                          directives: [
+                            {
+                              name: "show",
+                              rawName: "v-show",
+                              value: _vm.editmode,
+                              expression: "editmode"
+                            }
+                          ],
+                          staticClass: "btn btn-default",
+                          staticStyle: { "background-color": "transparent" },
+                          attrs: { type: "submit" }
+                        },
+                        [
+                          _c("i", {
+                            staticClass: "fa fa-check-circle fa-3x text-orange"
+                          })
+                        ]
+                      )
+                    ]
+                  )
                 ]
               )
             ])
@@ -72274,62 +72377,31 @@ var staticRenderFns = [
     var _vm = this
     var _h = _vm.$createElement
     var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "modal-header" }, [
-      _c(
-        "h5",
-        { staticClass: "modal-title", attrs: { id: "addNewUserTitle" } },
-        [_vm._v("Add New User")]
-      ),
-      _vm._v(" "),
-      _c(
-        "button",
-        {
-          staticClass: "close",
-          attrs: {
-            type: "button",
-            "data-dismiss": "modal",
-            "aria-label": "Close"
-          }
-        },
-        [_c("span", { attrs: { "aria-hidden": "true" } }, [_vm._v("×")])]
-      )
-    ])
+    return _c(
+      "button",
+      {
+        staticClass: "close",
+        attrs: {
+          type: "button",
+          "data-dismiss": "modal",
+          "aria-label": "Close"
+        }
+      },
+      [_c("span", { attrs: { "aria-hidden": "true" } }, [_vm._v("×")])]
+    )
   },
   function() {
     var _vm = this
     var _h = _vm.$createElement
     var _c = _vm._self._c || _h
     return _c(
-      "div",
+      "button",
       {
-        staticClass: "modal-footer",
-        staticStyle: {
-          "justify-content": "center",
-          display: "flex",
-          "align-items": "center"
-        }
+        staticClass: "btn btn-default",
+        staticStyle: { "background-color": "transparent" },
+        attrs: { type: "button", "data-dismiss": "modal" }
       },
-      [
-        _c(
-          "button",
-          {
-            staticClass: "btn btn-default",
-            staticStyle: { "background-color": "white" },
-            attrs: { type: "button", "data-dismiss": "modal" }
-          },
-          [_c("i", { staticClass: "fa fa-times-circle fa-3x text-fade-red" })]
-        ),
-        _vm._v(" "),
-        _c(
-          "button",
-          {
-            staticClass: "btn btn-default",
-            staticStyle: { "background-color": "white" },
-            attrs: { type: "submit" }
-          },
-          [_c("i", { staticClass: "fa fa-check-circle fa-3x text-cyan" })]
-        )
-      ]
+      [_c("i", { staticClass: "fa fa-times-circle fa-3x text-fade-red" })]
     )
   }
 ]
