@@ -18,10 +18,9 @@
                     </div> -->
                     <!-- END SEARCH BOX -->
 
-                    <a href="" data-toggle="modal" data-target="#addNewUser">
-                        <i class="fas fa-user-plus fa-3x text-green"></i>
-                    </a>
-
+                    <button class="btn btn-default" style="background-color: transparent;" @click="newModel">
+                        <i class="fas fa-user-plus fa-2x text-green"></i>
+                    </button>       
                 </div>
                 
               </div>
@@ -43,7 +42,7 @@
                     <td>{{user.type | upText}}</td>
                     <td>{{user.created_at | myDate}}</td>
                     <td>
-                        <a href="#">
+                        <a href="#" @click="editModel(user)">
                             <i class="fas fa-user-edit fa-lg text-orange"></i>
                         </a>
                         &nbsp;
@@ -111,8 +110,8 @@
             </div>
         
             <div class="modal-footer" style="justify-content: center; display: flex; align-items: center">
-                <button type="button" data-dismiss="modal" class="btn" style="background-color: white;"><i class="fa fa-times-circle fa-3x text-fade-red"></i></button>
-                <button class="btn" type="submit" style="background-color: white;"><i class="fa fa-check-circle fa-3x text-cyan"></i></button>
+                <button type="button" data-dismiss="modal" class="btn btn-default" style="background-color: white;"><i class="fa fa-times-circle fa-3x text-fade-red"></i></button>
+                <button class="btn btn-default" type="submit" style="background-color: white;"><i class="fa fa-check-circle fa-3x text-cyan"></i></button>
             </div>
         </form>
 
@@ -138,6 +137,15 @@
             }
         },
         methods:{
+            newModel(){
+                this.form.reset();
+                $('#addNewUser').modal('show');
+            },
+            editModel(user){
+                this.form.reset();
+                $('#addNewUser').modal('show');
+                this.form.fill(user);
+            },
             deleteUser(id){
                 swal({
                     title: 'Are you sure?',
