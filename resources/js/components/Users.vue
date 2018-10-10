@@ -111,9 +111,9 @@
             </div>
         
             <div class="modal-footer" style="justify-content: center; display: flex; align-items: center">
-                <button type="button" data-dismiss="modal" class="btn btn-default" style="background-color: transparent;"><i class="fa fa-times-circle fa-3x text-fade-red"></i></button>
-                <button v-show="!editmode" class="btn btn-default" type="submit" style="background-color: transparent;"><i class="fa fa-check-circle fa-3x text-green"></i></button>
-                <button v-show="editmode" class="btn btn-default" type="submit" style="background-color: transparent;"><i class="fa fa-check-circle fa-3x text-orange"></i></button>
+                <button type="button" data-dismiss="modal" class="btn btn-default" style="background-color: transparent;"><i class="fas fa-times-circle fa-3x text-fade-red"></i></button>
+                <button v-show="!editmode" class="btn btn-default" type="submit" style="background-color: transparent;"><i class="fas fa-check-circle fa-3x text-green"></i></button>
+                <button v-show="editmode" class="btn btn-default" type="submit" style="background-color: transparent;"><i class="fas fa-check-circle fa-3x text-orange"></i></button>
             </div>
         </form>
 

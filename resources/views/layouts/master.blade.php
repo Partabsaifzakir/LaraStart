@@ -208,6 +208,14 @@ scratch. This page gets rid of all links and provides the needed markup only.
             </ul>
           </li>
           <li class="nav-item">
+            <router-link to="/developer" class="nav-link">
+              <i class="nav-icon fab fa-connectdevelop text-cyan"></i>
+              <p>
+                Developer Tool
+              </p>
+            </router-link>
+          </li>
+          <li class="nav-item">
               <router-link to="/profile" class="nav-link">
                 <i class="nav-icon fas fa-user text-cyan"></i>
                 <p>
