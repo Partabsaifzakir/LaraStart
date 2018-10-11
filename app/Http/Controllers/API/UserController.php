@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Controllers\Controller;
 use App\User;
+use Image;
 
 class UserController extends Controller
 {
@@ -120,6 +121,8 @@ class UserController extends Controller
     {
         $user = auth('api')->user();
 
-        return $request->photo;
+        $name = time().'.'.explode('/', explode(':', substr($request->photo, 0, strpos($request->photo, ';')))[1])[1];
+
+        Image::make($request->photo)->save(public_path('img/profile/').$name);
     }
 }
