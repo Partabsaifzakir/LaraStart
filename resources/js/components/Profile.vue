@@ -70,24 +70,24 @@
                   <div class="tab-pane active show" id="settings">
                     <form class="form-horizontal">
                       <div class="form-group">
-                        <label for="inputName" class="col-sm-2 control-label">Name</label>
+                        <label for="name" class="col-sm-2 control-label">Name</label>
 
                         <div class="col-sm-10">
-                          <input type="email" class="form-control" id="inputName" placeholder="Name">
+                          <input v-model="profile.name" type="text" class="form-control" id="name" placeholder="Name">
                         </div>
                       </div>
                       <div class="form-group">
-                        <label for="inputEmail" class="col-sm-2 control-label">Email</label>
+                        <label for="email" class="col-sm-2 control-label">Email</label>
 
                         <div class="col-sm-10">
-                          <input type="email" class="form-control" id="inputEmail" placeholder="Email">
+                          <input v-model="profile.email" type="email" class="form-control" id="email" placeholder="Email">
                         </div>
                       </div>
                       <div class="form-group">
                         <label for="bio" class="col-sm-2 control-label">Bio</label>
 
                         <div class="col-sm-10">
-                          <input type="text" class="form-control" id="bio" placeholder="Bio">
+                          <input v-model="profile.bio" type="text" class="form-control" id="bio" placeholder="Bio">
                         </div>
                       </div>
 
@@ -95,7 +95,7 @@
                         <label for="type" class="col-sm-2 control-label">Type</label>
 
                         <div class="col-sm-10">
-                          <input type="text" class="form-control" id="type" placeholder="Type" disabled>
+                          <input v-model="profile.type" type="text" class="form-control" id="type" placeholder="Type" disabled>
                         </div>
                       </div>
 
@@ -103,7 +103,7 @@
                         <label for="photo" class="col-sm-2 control-label">Profile Pic</label>
 
                         <div class="col-sm-10">
-                          <input type="file" class="btn btn-default" id="photo">
+                          <input type="file" @change="updateProfile" class="btn btn-default" id="photo">
                         </div>
                       </div>
 
@@ -116,7 +116,7 @@
                         </div>
 
                         <div class="form-group" style="justify-content: center; display: flex; align-items: center">
-                        <button type="submit" class="btn btn-default" style="background-color: transparent;"><i class="fas fa-upload fa-3x text-blue"></i></button>
+                        <button type="submit" @click.prevent="updateInfo" class="btn btn-default" style="background-color: transparent;"><i class="fas fa-upload fa-3x text-blue"></i></button>
                         </div>
                     </form>
                   </div>
@@ -133,8 +133,51 @@
 
 <script>
 export default {
+  data() {
+    return {
+      profile: new Form({
+        id: "",
+        name: "",
+        email: "",
+        password: "",
+        type: "",
+        bio: "",
+        photo: ""
+      })
+    };
+  },
   mounted() {
     console.log("Component mounted.");
+  },
+  methods: {
+    updateInfo(){
+      this.$Progress.start();
+      this.profile
+        .put('api/profile')
+        .then(() => {
+          Fire.$emit("RefreshTable");
+          toast({
+            type: "success",
+            title: "Profile Updated Successfully"
+          });
+          this.$Progress.finish();
+        })
+        .catch(() => {
+          swal("Failed!", "There was something wrong.", "warning");
+          this.$Progress.fail();
+        });
+    },
+    updateProfile(e){
+      let file = e.target.files[0];
+      let reader = new FileReader();
+      reader.onloadend = (file) => {
+        this.profile.photo = reader.result;
+      }
+      reader.readAsDataURL(file);
+    }
+  },
+  created() {
+    axios.get("api/profile").then(({ data }) => this.profile.fill(data));
   }
 };
 </script>
