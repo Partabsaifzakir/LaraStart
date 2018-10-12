@@ -69,25 +69,34 @@
 
                   <div class="tab-pane active show" id="settings">
                     <form class="form-horizontal">
+                      
                       <div class="form-group">
                         <label for="name" class="col-sm-2 control-label">Name</label>
 
                         <div class="col-sm-10">
-                          <input v-model="profile.name" type="text" class="form-control" id="name" placeholder="Name">
+                          <input v-model="form.name" type="text" class="form-control" id="name" placeholder="Name" 
+                          :class="{ 'is-invalid': form.errors.has('name') }">
+                          <has-error :form="form" field="name"></has-error>
                         </div>
                       </div>
+
                       <div class="form-group">
                         <label for="email" class="col-sm-2 control-label">Email</label>
 
                         <div class="col-sm-10">
-                          <input v-model="profile.email" type="email" class="form-control" id="email" placeholder="Email">
+                          <input v-model="form.email" type="email" class="form-control" id="email" placeholder="Email"
+                          :class="{ 'is-invalid': form.errors.has('email') }">
+                          <has-error :form="form" field="email"></has-error>
                         </div>
                       </div>
+
                       <div class="form-group">
                         <label for="bio" class="col-sm-2 control-label">Bio</label>
 
                         <div class="col-sm-10">
-                          <input v-model="profile.bio" type="text" class="form-control" id="bio" placeholder="Bio">
+                          <input v-model="form.bio" type="text" class="form-control" id="bio" placeholder="Bio"
+                          :class="{ 'is-invalid': form.errors.has('bio') }">
+                          <has-error :form="form" field="bio"></has-error>
                         </div>
                       </div>
 
@@ -95,7 +104,7 @@
                         <label for="type" class="col-sm-2 control-label">Type</label>
 
                         <div class="col-sm-10">
-                          <input v-model="profile.type" type="text" class="form-control" id="type" placeholder="Type" disabled>
+                          <input v-model="form.type" type="text" class="form-control" id="type" placeholder="Type" disabled>
                         </div>
                       </div>
 
@@ -111,7 +120,10 @@
                         <label for="password" class="col-sm-2 control-label">Password</label>
 
                         <div class="col-sm-10">
-                          <input type="password" class="form-control" id="password" placeholder="Leave empty if not changing">
+                          <input type="password" v-model="form.password" class="form-control" id="password" 
+                          placeholder="Leave empty if not changing"
+                          :class="{ 'is-invalid': form.errors.has('password') }">
+                          <has-error :form="form" field="password"></has-error>
                         </div>
                         </div>
 
@@ -135,7 +147,7 @@
 export default {
   data() {
     return {
-      profile: new Form({
+      form: new Form({
         id: "",
         name: "",
         email: "",
@@ -146,39 +158,53 @@ export default {
       })
     };
   },
-  mounted() {
-    console.log("Component mounted.");
-  },
   methods: {
     updateInfo(){
       this.$Progress.start();
-      this.profile
+      this.form
         .put('api/profile')
         .then(() => {
           Fire.$emit("RefreshTable");
           toast({
             type: "success",
-            title: "Profile Updated Successfully"
+            title: "User Updated Successfully"
           });
           this.$Progress.finish();
         })
         .catch(() => {
           swal("Failed!", "There was something wrong.", "warning");
           this.$Progress.fail();
-        });
+        })
     },
     updateProfile(e){
       let file = e.target.files[0];
+
       let reader = new FileReader();
-      reader.onloadend = (file) => {
-        this.profile.photo = reader.result;
+
+      if(file['size'] < 2111775){
+        reader.onloadend = (file) => {
+          this.form.photo = reader.result;
+        }
+        reader.readAsDataURL(file);
+      }else{
+        swal({
+          type: 'error',
+          title: 'Oops',
+          text: 'You are uploading a large file.'
+        });
       }
-      reader.readAsDataURL(file);
-    }
+    },
+    created() {
+      axios.get("api/profile").then(({ data }) => this.form.fill(data));
+    },
   },
-  created() {
-    axios.get("api/profile").then(({ data }) => this.profile.fill(data));
-  }
+  mounted() {
+    console.log("Component mounted.");
+    this.created();
+    Fire.$on("RefreshTable", () => {
+      this.created();
+    });
+  },
 };
 </script>
 
