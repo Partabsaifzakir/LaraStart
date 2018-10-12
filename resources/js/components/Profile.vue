@@ -15,7 +15,7 @@
                     <h5 class="widget-user-desc">Web Designer</h5>
                 </div>
                 <div class="widget-user-image">
-                    <img class="img-circle" alt="User Avatar">
+                    <img class="img-circle" alt="User Avatar" :src="getProfilePhoto()">
                 </div>
                 <div class="card-footer">
                     <div class="row">
@@ -159,7 +159,13 @@ export default {
     };
   },
   methods: {
+    getProfilePhoto(){
+      return"img/profile/"+this.form.photo;
+    },
     updateInfo(){
+      if(this.form.password == ""){
+            this.form.password = undefined;
+          }
       this.$Progress.start();
       this.form
         .put('api/profile')
