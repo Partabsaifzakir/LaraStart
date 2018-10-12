@@ -193,12 +193,14 @@ scratch. This page gets rid of all links and provides the needed markup only.
               </p>
             </a>
             <ul class="nav nav-treeview">
+                @can('isAdmin')
               <li class="nav-item">
                 <router-link to="/users" class="nav-link">
                   <i class="fas fa-users nav-icon"></i>
                   <p>Users</p>
                 </router-link>
               </li>
+              @endcan
               <li class="nav-item">
                 <a href="#" class="nav-link">
                   <i class="fa fa-circle-o nav-icon"></i>
@@ -311,6 +313,12 @@ scratch. This page gets rid of all links and provides the needed markup only.
 <!-- ./wrapper -->
 
 <!-- REQUIRED SCRIPTS -->
+
+@auth
+    <script>
+      window.user = @json(auth()->user())
+    </script>
+@endauth
 
 <script src="/js/app.js"></script>
 

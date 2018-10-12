@@ -18,6 +18,7 @@ class UserController extends Controller
     public function __construct()
     {
         $this->middleware('auth:api');
+
     }
 
     /**
@@ -27,6 +28,8 @@ class UserController extends Controller
      */
     public function index()
     {
+        $this->authorize('isAdmin');
+
         return User::paginate(10);
     }
 

@@ -9,6 +9,11 @@ require('./bootstrap');
 
 window.Vue = require('vue');
 
+/*==========AUTHENTICATE GATE CODE==========*/
+import Gate from './Gate';
+Vue.prototype.$gate = new Gate(window.user);
+/*==========END AUTHENTICATE GATE CODE==========*/
+
 /*==========MOMENT CODE==========*/
 import moment from 'moment';
 import { Form, HasError, AlertError } from 'vform'
