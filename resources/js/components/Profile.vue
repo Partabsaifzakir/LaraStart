@@ -1,6 +1,7 @@
 <style>
 .widget-user-header {
-  background-size: contain;
+  background-size: cover;
+  background-position: center;
 }
 </style>
 <template>
@@ -10,7 +11,7 @@
                 <!-- Widget: user widget style 1 -->
                 <div class="card card-widget widget-user">
                 <!-- Add the bg color to the header using any of the bg-* classes -->
-                <div class="widget-user-header text-white" style="background-image: url('./img/background.jpg'); center center;">
+                <div class="widget-user-header text-white" style="background-image: url('./img/back2.jpg'); center center;">
                     <h3 class="widget-user-username">Elizabeth Pierce</h3>
                     <h5 class="widget-user-desc">Web Designer</h5>
                 </div>
@@ -160,7 +161,8 @@ export default {
   },
   methods: {
     getProfilePhoto(){
-      return"img/profile/"+this.form.photo;
+      let photo = (this.form.photo.length > 200) ? this.form.photo : "img/profile/"+this.form.photo;
+      return photo;
     },
     updateInfo(){
       if(this.form.password == ""){

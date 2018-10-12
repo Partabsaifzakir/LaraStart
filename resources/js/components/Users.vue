@@ -97,7 +97,6 @@
                     <option value="admin">Admin</option>
                     <option value="user">Standard User</option>
                     <option value="author">Author</option>
-                    
                     </select>
                   <has-error :form="form" field="type"></has-error>
                 </div>
@@ -198,14 +197,20 @@ export default {
       })
         .then(result => {
           if (result.value) {
+            this.$Progress.start();
             this.form.delete("api/user/" + id).then(() => {
-              swal("Deleted!", "Your user has been deleted.", "success");
               Fire.$emit("RefreshTable");
+              swal("Deleted!", "Your user has been deleted.", "success");
+              this.$Progress.finish();
+            }).catch(() => {
+                        swal("Failed!", "There was something wrong.", "warning");
+                        this.$Progress.fail();
             });
           }
         })
         .catch(() => {
           swal("Failed!", "There was something wrong.", "warning");
+          this.$Progress.fail();
         });
     },
     /*==============END FOR DELETING USER==============*/

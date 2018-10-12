@@ -72009,7 +72009,7 @@ exports = module.exports = __webpack_require__(4)(false);
 
 
 // module
-exports.push([module.i, "\n.widget-user-header {\n  background-size: contain;\n}\n", ""]);
+exports.push([module.i, "\n.widget-user-header {\n  background-size: cover;\n  background-position: center;\n}\n", ""]);
 
 // exports
 
@@ -72198,6 +72198,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
 
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
@@ -72216,7 +72217,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
   methods: {
     getProfilePhoto: function getProfilePhoto() {
-      return "img/profile/" + this.form.photo;
+      var photo = this.form.photo.length > 200 ? this.form.photo : "img/profile/" + this.form.photo;
+      return photo;
     },
     updateInfo: function updateInfo() {
       var _this = this;
@@ -72634,7 +72636,7 @@ var staticRenderFns = [
       "div",
       {
         staticClass: "widget-user-header text-white",
-        staticStyle: { "background-image": "url('./img/background.jpg')" }
+        staticStyle: { "background-image": "url('./img/back2.jpg')" }
       },
       [
         _c("h3", { staticClass: "widget-user-username" }, [
@@ -72910,7 +72912,6 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
-//
 
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
@@ -72990,13 +72991,19 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         confirmButtonText: "Yes, delete it!"
       }).then(function (result) {
         if (result.value) {
+          _this2.$Progress.start();
           _this2.form.delete("api/user/" + id).then(function () {
-            swal("Deleted!", "Your user has been deleted.", "success");
             Fire.$emit("RefreshTable");
+            swal("Deleted!", "Your user has been deleted.", "success");
+            _this2.$Progress.finish();
+          }).catch(function () {
+            swal("Failed!", "There was something wrong.", "warning");
+            _this2.$Progress.fail();
           });
         }
       }).catch(function () {
         swal("Failed!", "There was something wrong.", "warning");
+        _this2.$Progress.fail();
       });
     },
 
