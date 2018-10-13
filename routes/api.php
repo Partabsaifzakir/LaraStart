@@ -17,10 +17,15 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-
+/*============ USER ROUTES ============*/
 Route::apiResources([
     'user' => 'API\UserController'
-    ]);
+]);
 
-    Route::get('profile', 'API\UserController@profile');
-    Route::put('profile', 'API\UserController@updateProfile');
+Route::get('profile', 'API\UserController@profile');
+Route::put('profile', 'API\UserController@updateProfile');
+
+/*============ VENDOR ROUTES ============*/
+Route::apiResources([
+    'vendor' => 'API\VendorController'
+]);

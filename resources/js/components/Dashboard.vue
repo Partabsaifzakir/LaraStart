@@ -1,14 +1,8 @@
 <template>
-    <div class="container mt-4">
+    <div class="container">
         <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card card-default">
-                    <div class="card-header">Dashboard Component</div>
-
-                    <div class="card-body">
-                        I'm an Dashboard component.
-                    </div>
-                </div>
+            <div class="col-md-10">
+                <maintenance></maintenance>
             </div>
         </div>
     </div>

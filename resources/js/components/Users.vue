@@ -57,8 +57,14 @@
             </div>
             <!-- /.card -->
           </div>
-        </div>
+      </div>
 
+      <!--======== FOR UNAUTHORIZED SVG ========-->
+      <div v-if="!$gate.isAdmin()">
+        <not-found></not-found>
+      </div>
+      <!--======== END FOR UNAUTHORIZED SVG ========-->
+      
         <!-- Modal -->
         <div class="modal fade" id="addNewUser" tabindex="-1" role="dialog" aria-labelledby="addNewUserTitle" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
@@ -116,9 +122,9 @@
             </div>
         </form>
 
-            </div>
         </div>
         </div>
+      </div> 
     </div>
 </template>
 
@@ -151,6 +157,35 @@ export default {
       $("#addNewUser").modal("show");
     },
     /*==============END FOR OPENING NEW MODEL==============*/
+
+    /*==============LOADING USER==============*/
+    loadUsers() {
+      if (this.$gate.isAdmin()) {
+        axios.get("api/user").then(({ data }) => (this.users = data.data));
+      }
+    },
+    /*==============END LOADING USER==============*/
+
+    /*==============CREATING USER==============*/
+    createUser() {
+      this.$Progress.start();
+      this.form
+        .post("api/user")
+        .then(() => {
+          Fire.$emit("RefreshTable");
+          $("#addNewUser").modal("hide");
+          toast({
+            type: "success",
+            title: "User Created Successfully"
+          });
+          this.$Progress.finish();
+        })
+        .catch(() => {
+          swal("Failed!", "There was something wrong.", "warning");
+          this.$Progress.fail();
+        });
+    },
+    /*==============END CREATING USER==============*/
 
     /*==============FOR EDITING USER==============*/
     editModel(user) {
@@ -198,47 +233,25 @@ export default {
         .then(result => {
           if (result.value) {
             this.$Progress.start();
-            this.form.delete("api/user/" + id).then(() => {
-              Fire.$emit("RefreshTable");
-              swal("Deleted!", "Your user has been deleted.", "success");
-              this.$Progress.finish();
-            }).catch(() => {
-                        swal("Failed!", "There was something wrong.", "warning");
-                        this.$Progress.fail();
-            });
+            this.form
+              .delete("api/user/" + id)
+              .then(() => {
+                Fire.$emit("RefreshTable");
+                swal("Deleted!", "Your user has been deleted.", "success");
+                this.$Progress.finish();
+              })
+              .catch(() => {
+                swal("Failed!", "There was something wrong.", "warning");
+                this.$Progress.fail();
+              });
           }
         })
         .catch(() => {
           swal("Failed!", "There was something wrong.", "warning");
           this.$Progress.fail();
         });
-    },
-    /*==============END FOR DELETING USER==============*/
-
-    /*==============LOADING USER==============*/
-    loadUsers() {
-      if(this.$gate.isAdmin()){
-      axios.get("api/user").then(({ data }) => (this.users = data.data));
-      }
-    },
-    createUser() {
-      this.$Progress.start();
-      this.form
-        .post("api/user")
-        .then(() => {
-          Fire.$emit("RefreshTable");
-          $("#addNewUser").modal("hide");
-          toast({
-            type: "success",
-            title: "User Created Successfully"
-          });
-          this.$Progress.finish();
-        })
-        .catch(() => {
-          swal("Failed!", "There was something wrong.", "warning");
-          this.$Progress.fail();
-          });
     }
+    /*==============END FOR DELETING USER==============*/
   },
   mounted() {
     this.loadUsers();

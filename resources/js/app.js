@@ -65,7 +65,8 @@ let routes = [
     { path: '/dashboard', component: require('./components/Dashboard.vue') },
     { path: '/developer', component: require('./components/Developer.vue') },
     { path: '/profile', component: require('./components/Profile.vue') },
-    { path: '/Users', component: require('./components/Users.vue') }
+    { path: '/users', component: require('./components/Users.vue') },
+    { path: '/vendors', component: require('./components/MasterForm/Vendor.vue') }
   ]
 /*==========END ALL VUE COMPONENTS CODE==========*/
 
@@ -101,6 +102,17 @@ Vue.component(
     require('./components/passport/PersonalAccessTokens.vue')
 );
 /*==========END ALL PASSPORT COMPONENTS CODE==========*/
+
+/*==========ALL SVG COMPONENTS CODE==========*/
+Vue.component(
+    'not-found',
+    require('./components/SVG/NotFound.vue')
+);
+Vue.component(
+    'maintenance',
+    require('./components/SVG/Maintenance.vue')
+);
+/*==========END ALL SVG COMPONENTS CODE==========*/
 
 Vue.component('example-component', require('./components/ExampleComponent.vue'));
 
