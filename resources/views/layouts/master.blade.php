@@ -203,10 +203,10 @@ scratch. This page gets rid of all links and provides the needed markup only.
               </li>
               
               <li class="nav-item">
-                <a href="#" class="nav-link">
+                <router-link to="/customers" class="nav-link">
                   <i class="fas fa-file-alt nav-icon"></i>
                   <p>Customer Form</p>
-                </a>
+                </router-link>
               </li>
             </ul>
           </li>

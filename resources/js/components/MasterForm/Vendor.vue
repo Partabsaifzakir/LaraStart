@@ -1,5 +1,5 @@
 <template>
-    <div class="container">
+    <div class="container mt-4">
         <div class="row justify-content-center">
             <div class="col-md-12">
             <div class="card">
@@ -26,9 +26,9 @@
                   
                   <tr v-for="vendor in vendors" :key="vendor.id">
                     <td>{{ vendor.vendor_company_name | upText }}</td>
-                    <td>{{ vendor.vendor_address | upText}}</td>
                     <td>{{ vendor.vendor_contact }}</td>
                     <td>{{ vendor.vendor_person_name | upText}}</td>
+                    <td>{{ vendor.vendor_address | upText}}</td>
                     <td>{{ vendor.vendor_email }}</td>
                     <td>
                         <a href="#" @click="editModel(vendor)">
@@ -66,7 +66,7 @@
                 </div>
 
                 <div class="form-group">
-                  <input v-model="form.vendor_contact" type="number" name="vendor_contact" placeholder="Enter Contact Number"
+                  <input v-model="form.vendor_contact" type="text" name="vendor_contact" placeholder="Enter Contact Number"
                     class="form-control" :class="{ 'is-invalid': form.errors.has('vendor_contact') }">
                   <has-error :form="form" field="vendor_contact"></has-error>
                 </div>

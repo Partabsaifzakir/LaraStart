@@ -29,3 +29,8 @@ Route::put('profile', 'API\UserController@updateProfile');
 Route::apiResources([
     'vendor' => 'API\VendorController'
 ]);
+
+/*============ CUSTOMER ROUTES ============*/
+Route::apiResources([
+    'customer' => 'API\CustomerController'
+]);

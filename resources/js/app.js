@@ -22,7 +22,7 @@ Vue.filter('upText', function(text){
     return text.charAt(0).toUpperCase() + text.slice(1)
 });
 Vue.filter('myDate', function(date){
-    return moment().format("MMM Do YY");
+    return moment().format("Do MMM YY");
 });
 /*==========END MOMENT CODE==========*/
 
@@ -66,8 +66,9 @@ let routes = [
     { path: '/developer', component: require('./components/Developer.vue') },
     { path: '/profile', component: require('./components/Profile.vue') },
     { path: '/users', component: require('./components/Users.vue') },
-    { path: '/vendors', component: require('./components/MasterForm/Vendor.vue') }
-  ]
+    { path: '/vendors', component: require('./components/MasterForm/Vendor.vue') },
+    { path: '/customers', component: require('./components/MasterForm/Customer.vue') }
+]
 /*==========END ALL VUE COMPONENTS CODE==========*/
 
 /*==========RELOADER CODE==========*/
