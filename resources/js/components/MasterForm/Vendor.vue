@@ -1,3 +1,16 @@
+<style>
+.modal-full {
+    min-width: auto;
+    margin: auto;
+    
+}
+
+.modal-full .modal-content {
+    min-height: auto;
+}
+</style>
+
+
 <template>
     <div class="container mt-4">
         <div class="row justify-content-center">
@@ -19,7 +32,6 @@
                     <th>Company Name</th>
                     <th>Contact Number</th>
                     <th>Contact Person Name</th>
-                    <th>Vendor Address</th>
                     <th>Vendor Email</th>
                     <th>Modify</th>
                   </tr>
@@ -28,7 +40,6 @@
                     <td>{{ vendor.vendor_company_name | upText }}</td>
                     <td>{{ vendor.vendor_contact }}</td>
                     <td>{{ vendor.vendor_person_name | upText}}</td>
-                    <td>{{ vendor.vendor_address | upText}}</td>
                     <td>{{ vendor.vendor_email }}</td>
                     <td>
                         <a href="#" @click="editModel(vendor)">
@@ -47,8 +58,8 @@
             </div>
         </div>
 
-    <div class="modal fade" id="addNewVendor" tabindex="-1" role="dialog" aria-labelledby="addNewVendorTitle" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal fade" id="addNewVendor" tabindex="-1" role="dialog" aria-labelledby="addNewVendorTitle" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered modal-full" role="document">
             <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" v-show="!editmode" id="addNewVendorTitle">Add New Vendor</h5>

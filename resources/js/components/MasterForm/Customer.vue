@@ -21,7 +21,6 @@
                     <th>Customer Contact</th>
                     <th>Customer Type</th>
                     <th>Customer Email</th>
-                    <th>Customer Date</th>
                     <th>Modify</th>
                   </tr>
                   
@@ -32,7 +31,7 @@
                     <td>{{ customer.customer_contact }}</td>
                     <td>{{ customer.customer_type | upText}}</td>
                     <td>{{ customer.customer_email }}</td>
-                    <td>{{ customer.customer_date | myDate}}</td>
+                    
                     <td>
                         <a href="#" @click="editModel(customer)">
                             <i class="fas fa-user-edit fa-lg text-orange"></i>
@@ -50,7 +49,7 @@
             </div>
         </div>
 
-    <div class="modal fade" id="addNewCustomer" tabindex="-1" role="dialog" aria-labelledby="addNewCustomerTitle" aria-hidden="true">
+    <div class="modal fade" id="addNewCustomer" tabindex="-1" role="dialog" aria-labelledby="addNewCustomerTitle" aria-hidden="true" data-backdrop="static" data-keyboard="false">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
             <div class="modal-header">
