@@ -200,6 +200,7 @@ export default {
       $("#addNewCustomer").modal("show");
       this.form.fill(customer);
     },
+
     /*==============END FOR EDITING CUSTOMER==============*/
 
     /*==============FOR UPDATING CUSTOMER==============*/

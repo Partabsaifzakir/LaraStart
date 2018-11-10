@@ -4578,6 +4578,115 @@
 
 /***/ }),
 /* 1 */
+/***/ (function(module, exports) {
+
+/* globals __VUE_SSR_CONTEXT__ */
+
+// IMPORTANT: Do NOT use ES2015 features in this file.
+// This module is a runtime utility for cleaner component module output and will
+// be included in the final webpack user bundle.
+
+module.exports = function normalizeComponent (
+  rawScriptExports,
+  compiledTemplate,
+  functionalTemplate,
+  injectStyles,
+  scopeId,
+  moduleIdentifier /* server only */
+) {
+  var esModule
+  var scriptExports = rawScriptExports = rawScriptExports || {}
+
+  // ES6 modules interop
+  var type = typeof rawScriptExports.default
+  if (type === 'object' || type === 'function') {
+    esModule = rawScriptExports
+    scriptExports = rawScriptExports.default
+  }
+
+  // Vue.extend constructor export interop
+  var options = typeof scriptExports === 'function'
+    ? scriptExports.options
+    : scriptExports
+
+  // render functions
+  if (compiledTemplate) {
+    options.render = compiledTemplate.render
+    options.staticRenderFns = compiledTemplate.staticRenderFns
+    options._compiled = true
+  }
+
+  // functional template
+  if (functionalTemplate) {
+    options.functional = true
+  }
+
+  // scopedId
+  if (scopeId) {
+    options._scopeId = scopeId
+  }
+
+  var hook
+  if (moduleIdentifier) { // server build
+    hook = function (context) {
+      // 2.3 injection
+      context =
+        context || // cached call
+        (this.$vnode && this.$vnode.ssrContext) || // stateful
+        (this.parent && this.parent.$vnode && this.parent.$vnode.ssrContext) // functional
+      // 2.2 with runInNewContext: true
+      if (!context && typeof __VUE_SSR_CONTEXT__ !== 'undefined') {
+        context = __VUE_SSR_CONTEXT__
+      }
+      // inject component styles
+      if (injectStyles) {
+        injectStyles.call(this, context)
+      }
+      // register component module identifier for async chunk inferrence
+      if (context && context._registeredComponents) {
+        context._registeredComponents.add(moduleIdentifier)
+      }
+    }
+    // used by ssr in case component is cached and beforeCreate
+    // never gets called
+    options._ssrRegister = hook
+  } else if (injectStyles) {
+    hook = injectStyles
+  }
+
+  if (hook) {
+    var functional = options.functional
+    var existing = functional
+      ? options.render
+      : options.beforeCreate
+
+    if (!functional) {
+      // inject component registration as beforeCreate hook
+      options.beforeCreate = existing
+        ? [].concat(existing, hook)
+        : [hook]
+    } else {
+      // for template-only hot-reload because in that case the render fn doesn't
+      // go through the normalizer
+      options._injectStyles = hook
+      // register for functioal component in vue file
+      options.render = function renderWithStyleInjection (h, context) {
+        hook.call(context)
+        return existing(h, context)
+      }
+    }
+  }
+
+  return {
+    esModule: esModule,
+    exports: scriptExports,
+    options: options
+  }
+}
+
+
+/***/ }),
+/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4887,143 +4996,7 @@ module.exports = {
 
 
 /***/ }),
-/* 2 */
-/***/ (function(module, exports) {
-
-/* globals __VUE_SSR_CONTEXT__ */
-
-// IMPORTANT: Do NOT use ES2015 features in this file.
-// This module is a runtime utility for cleaner component module output and will
-// be included in the final webpack user bundle.
-
-module.exports = function normalizeComponent (
-  rawScriptExports,
-  compiledTemplate,
-  functionalTemplate,
-  injectStyles,
-  scopeId,
-  moduleIdentifier /* server only */
-) {
-  var esModule
-  var scriptExports = rawScriptExports = rawScriptExports || {}
-
-  // ES6 modules interop
-  var type = typeof rawScriptExports.default
-  if (type === 'object' || type === 'function') {
-    esModule = rawScriptExports
-    scriptExports = rawScriptExports.default
-  }
-
-  // Vue.extend constructor export interop
-  var options = typeof scriptExports === 'function'
-    ? scriptExports.options
-    : scriptExports
-
-  // render functions
-  if (compiledTemplate) {
-    options.render = compiledTemplate.render
-    options.staticRenderFns = compiledTemplate.staticRenderFns
-    options._compiled = true
-  }
-
-  // functional template
-  if (functionalTemplate) {
-    options.functional = true
-  }
-
-  // scopedId
-  if (scopeId) {
-    options._scopeId = scopeId
-  }
-
-  var hook
-  if (moduleIdentifier) { // server build
-    hook = function (context) {
-      // 2.3 injection
-      context =
-        context || // cached call
-        (this.$vnode && this.$vnode.ssrContext) || // stateful
-        (this.parent && this.parent.$vnode && this.parent.$vnode.ssrContext) // functional
-      // 2.2 with runInNewContext: true
-      if (!context && typeof __VUE_SSR_CONTEXT__ !== 'undefined') {
-        context = __VUE_SSR_CONTEXT__
-      }
-      // inject component styles
-      if (injectStyles) {
-        injectStyles.call(this, context)
-      }
-      // register component module identifier for async chunk inferrence
-      if (context && context._registeredComponents) {
-        context._registeredComponents.add(moduleIdentifier)
-      }
-    }
-    // used by ssr in case component is cached and beforeCreate
-    // never gets called
-    options._ssrRegister = hook
-  } else if (injectStyles) {
-    hook = injectStyles
-  }
-
-  if (hook) {
-    var functional = options.functional
-    var existing = functional
-      ? options.render
-      : options.beforeCreate
-
-    if (!functional) {
-      // inject component registration as beforeCreate hook
-      options.beforeCreate = existing
-        ? [].concat(existing, hook)
-        : [hook]
-    } else {
-      // for template-only hot-reload because in that case the render fn doesn't
-      // go through the normalizer
-      options._injectStyles = hook
-      // register for functioal component in vue file
-      options.render = function renderWithStyleInjection (h, context) {
-        hook.call(context)
-        return existing(h, context)
-      }
-    }
-  }
-
-  return {
-    esModule: esModule,
-    exports: scriptExports,
-    options: options
-  }
-}
-
-
-/***/ }),
 /* 3 */
-/***/ (function(module, exports) {
-
-var g;
-
-// This works in non-strict mode
-g = (function() {
-	return this;
-})();
-
-try {
-	// This works if eval is allowed (see CSP)
-	g = g || Function("return this")() || (1,eval)("this");
-} catch(e) {
-	// This works if the window reference is available
-	if(typeof window === "object")
-		g = window;
-}
-
-// g can still be undefined, but nothing to do about it...
-// We return undefined, instead of nothing here, so it's
-// easier to handle this case. if(!global) { ...}
-
-module.exports = g;
-
-
-/***/ }),
-/* 4 */
 /***/ (function(module, exports) {
 
 /*
@@ -5105,7 +5078,7 @@ function toComment(sourceMap) {
 
 
 /***/ }),
-/* 5 */
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*
@@ -5333,13 +5306,40 @@ function applyToTag (styleElement, obj) {
 
 
 /***/ }),
+/* 5 */
+/***/ (function(module, exports) {
+
+var g;
+
+// This works in non-strict mode
+g = (function() {
+	return this;
+})();
+
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || Function("return this")() || (1,eval)("this");
+} catch(e) {
+	// This works if the window reference is available
+	if(typeof window === "object")
+		g = window;
+}
+
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
+
+module.exports = g;
+
+
+/***/ }),
 /* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(process) {
 
-var utils = __webpack_require__(1);
+var utils = __webpack_require__(2);
 var normalizeHeaderName = __webpack_require__(149);
 
 var DEFAULT_CONTENT_TYPE = {
@@ -8003,7 +8003,7 @@ Popper.Defaults = Defaults;
 /* harmony default export */ __webpack_exports__["default"] = (Popper);
 //# sourceMappingURL=popper.js.map
 
-/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(5)))
 
 /***/ }),
 /* 9 */
@@ -18597,7 +18597,7 @@ process.umask = function() { return 0; };
 "use strict";
 
 
-var utils = __webpack_require__(1);
+var utils = __webpack_require__(2);
 var settle = __webpack_require__(150);
 var buildURL = __webpack_require__(152);
 var parseHeaders = __webpack_require__(153);
@@ -30690,7 +30690,7 @@ module.exports = Cancel;
 /***/ (function(module, exports, __webpack_require__) {
 
 __webpack_require__(141);
-module.exports = __webpack_require__(220);
+module.exports = __webpack_require__(233);
 
 
 /***/ }),
@@ -30702,10 +30702,10 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Gate__ = __webpack_require__(167);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_moment__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_moment___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_moment__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vform__ = __webpack_require__(169);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_vform___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_vform__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_sweetalert2__ = __webpack_require__(170);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_sweetalert2___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_sweetalert2__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_sweetalert2__ = __webpack_require__(169);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_sweetalert2___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_sweetalert2__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_vform__ = __webpack_require__(170);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_vform___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_vform__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_vue_progressbar__ = __webpack_require__(171);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_vue_progressbar___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_vue_progressbar__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_vue_router__ = __webpack_require__(172);
@@ -30725,23 +30725,39 @@ window.Vue = __webpack_require__(164);
 Vue.prototype.$gate = new __WEBPACK_IMPORTED_MODULE_0__Gate__["a" /* default */](window.user);
 /*==========END AUTHENTICATE GATE CODE==========*/
 
-/*==========MOMENT CODE==========*/
+/*==========AUTHENTICATE GATE CODE==========*/
+Vue.filter('toMoney', function (value) {
+    if (!value) return '$0.00';
 
+    var formatter = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2
+    });
+
+    return formatter.format(value);
+});
+/*==========END AUTHENTICATE GATE CODE==========*/
+
+/*==========MOMENT CODE==========*/
 
 
 Vue.filter('upText', function (text) {
     return text.charAt(0).toUpperCase() + text.slice(1);
 });
-Vue.filter('myDate', function (date) {
-    return __WEBPACK_IMPORTED_MODULE_1_moment___default()().format("Do MMM YY");
+
+Vue.filter('myDate', function (value) {
+    if (value) {
+        return __WEBPACK_IMPORTED_MODULE_1_moment___default()(String(value)).format('DD-MMM-YYYY');
+    }
 });
 /*==========END MOMENT CODE==========*/
 
 /*==========TOAST CODE==========*/
 
-window.swal = __WEBPACK_IMPORTED_MODULE_3_sweetalert2___default.a;
+window.swal = __WEBPACK_IMPORTED_MODULE_2_sweetalert2___default.a;
 
-var toast = __WEBPACK_IMPORTED_MODULE_3_sweetalert2___default.a.mixin({
+var toast = __WEBPACK_IMPORTED_MODULE_2_sweetalert2___default.a.mixin({
     toast: true,
     position: 'top-end',
     showConfirmButton: false,
@@ -30752,9 +30768,11 @@ window.toast = toast;
 /*==========END TOAST CODE==========*/
 
 /*==========V-FORM VALIDATION CODE==========*/
-window.Form = __WEBPACK_IMPORTED_MODULE_2_vform__["Form"];
-Vue.component(__WEBPACK_IMPORTED_MODULE_2_vform__["HasError"].name, __WEBPACK_IMPORTED_MODULE_2_vform__["HasError"]);
-Vue.component(__WEBPACK_IMPORTED_MODULE_2_vform__["AlertError"].name, __WEBPACK_IMPORTED_MODULE_2_vform__["AlertError"]);
+
+
+window.Form = __WEBPACK_IMPORTED_MODULE_3_vform__["Form"];
+Vue.component(__WEBPACK_IMPORTED_MODULE_3_vform__["HasError"].name, __WEBPACK_IMPORTED_MODULE_3_vform__["HasError"]);
+Vue.component(__WEBPACK_IMPORTED_MODULE_3_vform__["AlertError"].name, __WEBPACK_IMPORTED_MODULE_3_vform__["AlertError"]);
 /*==========END V-FORM VALIDATION CODE==========*/
 
 /*==========PROGRESS BAR CODE==========*/
@@ -30772,7 +30790,7 @@ Vue.use(__WEBPACK_IMPORTED_MODULE_5_vue_router__["a" /* default */]);
 /*==========END VUE ROUTER CODE==========*/
 
 /*==========ALL VUE COMPONENTS CODE==========*/
-var routes = [{ path: '/dashboard', component: __webpack_require__(173) }, { path: '/developer', component: __webpack_require__(176) }, { path: '/profile', component: __webpack_require__(179) }, { path: '/users', component: __webpack_require__(185) }, { path: '/vendors', component: __webpack_require__(188) }, { path: '/customers', component: __webpack_require__(193) }];
+var routes = [{ path: '/dashboard', component: __webpack_require__(173) }, { path: '/developer', component: __webpack_require__(176) }, { path: '/profile', component: __webpack_require__(179) }, { path: '/users', component: __webpack_require__(185) }, { path: '/vendors', component: __webpack_require__(188) }, { path: '/customers', component: __webpack_require__(193) }, { path: '/ticket-invoices', component: __webpack_require__(196) }, { path: '/ct-invoices', component: __webpack_require__(201) }, { name: 'ctInvoiceView', path: '/ct-invoice-view/:id', component: ('ctInvoiceView', __webpack_require__(206)) }];
 /*==========END ALL VUE COMPONENTS CODE==========*/
 
 /*==========RELOADER CODE==========*/
@@ -30791,19 +30809,19 @@ var router = new __WEBPACK_IMPORTED_MODULE_5_vue_router__["a" /* default */]({
  */
 
 /*==========ALL PASSPORT COMPONENTS CODE==========*/
-Vue.component('passport-clients', __webpack_require__(196));
+Vue.component('passport-clients', __webpack_require__(209));
 
-Vue.component('passport-authorized-clients', __webpack_require__(201));
+Vue.component('passport-authorized-clients', __webpack_require__(214));
 
-Vue.component('passport-personal-access-tokens', __webpack_require__(206));
+Vue.component('passport-personal-access-tokens', __webpack_require__(219));
 /*==========END ALL PASSPORT COMPONENTS CODE==========*/
 
 /*==========ALL SVG COMPONENTS CODE==========*/
-Vue.component('not-found', __webpack_require__(211));
-Vue.component('maintenance', __webpack_require__(214));
+Vue.component('not-found', __webpack_require__(224));
+Vue.component('maintenance', __webpack_require__(227));
 /*==========END ALL SVG COMPONENTS CODE==========*/
 
-Vue.component('example-component', __webpack_require__(217));
+Vue.component('example-component', __webpack_require__(230));
 
 var app = new Vue({
     el: '#app',
@@ -47985,7 +48003,7 @@ if (token) {
   }
 }.call(this));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3), __webpack_require__(7)(module)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(5), __webpack_require__(7)(module)))
 
 /***/ }),
 /* 144 */
@@ -51956,7 +51974,7 @@ if (token) {
 "use strict";
 
 
-var utils = __webpack_require__(1);
+var utils = __webpack_require__(2);
 var bind = __webpack_require__(11);
 var Axios = __webpack_require__(148);
 var defaults = __webpack_require__(6);
@@ -52043,7 +52061,7 @@ function isSlowBuffer (obj) {
 
 
 var defaults = __webpack_require__(6);
-var utils = __webpack_require__(1);
+var utils = __webpack_require__(2);
 var InterceptorManager = __webpack_require__(157);
 var dispatchRequest = __webpack_require__(158);
 
@@ -52128,7 +52146,7 @@ module.exports = Axios;
 "use strict";
 
 
-var utils = __webpack_require__(1);
+var utils = __webpack_require__(2);
 
 module.exports = function normalizeHeaderName(headers, normalizedName) {
   utils.forEach(headers, function processHeader(value, name) {
@@ -52208,7 +52226,7 @@ module.exports = function enhanceError(error, config, code, request, response) {
 "use strict";
 
 
-var utils = __webpack_require__(1);
+var utils = __webpack_require__(2);
 
 function encode(val) {
   return encodeURIComponent(val).
@@ -52281,7 +52299,7 @@ module.exports = function buildURL(url, params, paramsSerializer) {
 "use strict";
 
 
-var utils = __webpack_require__(1);
+var utils = __webpack_require__(2);
 
 // Headers whose duplicates are ignored by node
 // c.f. https://nodejs.org/api/http.html#http_message_headers
@@ -52341,7 +52359,7 @@ module.exports = function parseHeaders(headers) {
 "use strict";
 
 
-var utils = __webpack_require__(1);
+var utils = __webpack_require__(2);
 
 module.exports = (
   utils.isStandardBrowserEnv() ?
@@ -52459,7 +52477,7 @@ module.exports = btoa;
 "use strict";
 
 
-var utils = __webpack_require__(1);
+var utils = __webpack_require__(2);
 
 module.exports = (
   utils.isStandardBrowserEnv() ?
@@ -52519,7 +52537,7 @@ module.exports = (
 "use strict";
 
 
-var utils = __webpack_require__(1);
+var utils = __webpack_require__(2);
 
 function InterceptorManager() {
   this.handlers = [];
@@ -52578,7 +52596,7 @@ module.exports = InterceptorManager;
 "use strict";
 
 
-var utils = __webpack_require__(1);
+var utils = __webpack_require__(2);
 var transformData = __webpack_require__(159);
 var isCancel = __webpack_require__(15);
 var defaults = __webpack_require__(6);
@@ -52671,7 +52689,7 @@ module.exports = function dispatchRequest(config) {
 "use strict";
 
 
-var utils = __webpack_require__(1);
+var utils = __webpack_require__(2);
 
 /**
  * Transform the data for a request or a response
@@ -63795,7 +63813,7 @@ Vue.compile = compileToFunctions;
 
 module.exports = Vue;
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3), __webpack_require__(165).setImmediate))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(5), __webpack_require__(165).setImmediate))
 
 /***/ }),
 /* 165 */
@@ -63865,7 +63883,7 @@ exports.clearImmediate = (typeof self !== "undefined" && self.clearImmediate) ||
                          (typeof global !== "undefined" && global.clearImmediate) ||
                          (this && this.clearImmediate);
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(5)))
 
 /***/ }),
 /* 166 */
@@ -64058,7 +64076,7 @@ exports.clearImmediate = (typeof self !== "undefined" && self.clearImmediate) ||
     attachTo.clearImmediate = clearImmediate;
 }(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3), __webpack_require__(12)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(5), __webpack_require__(12)))
 
 /***/ }),
 /* 167 */
@@ -64368,989 +64386,6 @@ webpackContext.id = 168;
 
 /***/ }),
 /* 169 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports =
-/******/ (function(modules) { // webpackBootstrap
-/******/ 	// The module cache
-/******/ 	var installedModules = {};
-/******/
-/******/ 	// The require function
-/******/ 	function __webpack_require__(moduleId) {
-/******/
-/******/ 		// Check if module is in cache
-/******/ 		if(installedModules[moduleId]) {
-/******/ 			return installedModules[moduleId].exports;
-/******/ 		}
-/******/ 		// Create a new module (and put it into the cache)
-/******/ 		var module = installedModules[moduleId] = {
-/******/ 			i: moduleId,
-/******/ 			l: false,
-/******/ 			exports: {}
-/******/ 		};
-/******/
-/******/ 		// Execute the module function
-/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-/******/
-/******/ 		// Flag the module as loaded
-/******/ 		module.l = true;
-/******/
-/******/ 		// Return the exports of the module
-/******/ 		return module.exports;
-/******/ 	}
-/******/
-/******/
-/******/ 	// expose the modules object (__webpack_modules__)
-/******/ 	__webpack_require__.m = modules;
-/******/
-/******/ 	// expose the module cache
-/******/ 	__webpack_require__.c = installedModules;
-/******/
-/******/ 	// define getter function for harmony exports
-/******/ 	__webpack_require__.d = function(exports, name, getter) {
-/******/ 		if(!__webpack_require__.o(exports, name)) {
-/******/ 			Object.defineProperty(exports, name, {
-/******/ 				configurable: false,
-/******/ 				enumerable: true,
-/******/ 				get: getter
-/******/ 			});
-/******/ 		}
-/******/ 	};
-/******/
-/******/ 	// getDefaultExport function for compatibility with non-harmony modules
-/******/ 	__webpack_require__.n = function(module) {
-/******/ 		var getter = module && module.__esModule ?
-/******/ 			function getDefault() { return module['default']; } :
-/******/ 			function getModuleExports() { return module; };
-/******/ 		__webpack_require__.d(getter, 'a', getter);
-/******/ 		return getter;
-/******/ 	};
-/******/
-/******/ 	// Object.prototype.hasOwnProperty.call
-/******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
-/******/
-/******/ 	// __webpack_public_path__
-/******/ 	__webpack_require__.p = "./";
-/******/
-/******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 0);
-/******/ })
-/************************************************************************/
-/******/ ({
-
-/***/ 0:
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__("lVK7");
-
-
-/***/ }),
-
-/***/ "OMN4":
-/***/ (function(module, exports) {
-
-module.exports = __webpack_require__(10);
-
-/***/ }),
-
-/***/ "lVK7":
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-
-// EXTERNAL MODULE: external "axios"
-var external__axios_ = __webpack_require__("OMN4");
-var external__axios__default = /*#__PURE__*/__webpack_require__.n(external__axios_);
-
-// CONCATENATED MODULE: ./src/util.js
-function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
-/**
- * Deep copy the given object.
- *
- * @param  {Object} obj
- * @return {Object}
- */
-function deepCopy(obj) {
-  if (obj === null || _typeof(obj) !== 'object') {
-    return obj;
-  }
-
-  var copy = Array.isArray(obj) ? [] : {};
-  Object.keys(obj).forEach(function (key) {
-    copy[key] = deepCopy(obj[key]);
-  });
-  return copy;
-}
-/**
- * If the given value is not an array, wrap it in one.
- *
- * @param  {Any} value
- * @return {Array}
- */
-
-function arrayWrap(value) {
-  return Array.isArray(value) ? value : [value];
-}
-// CONCATENATED MODULE: ./src/Errors.js
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
-
-function Errors__typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { Errors__typeof = function _typeof(obj) { return typeof obj; }; } else { Errors__typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return Errors__typeof(obj); }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-
-
-var Errors_Errors =
-/*#__PURE__*/
-function () {
-  /**
-   * Create a new error bag instance.
-   */
-  function Errors() {
-    _classCallCheck(this, Errors);
-
-    this.errors = {};
-  }
-  /**
-   * Set the errors object or field error messages.
-   *
-   * @param {Object|String} field
-   * @param {Array|String|undefined} messages
-   */
-
-
-  _createClass(Errors, [{
-    key: "set",
-    value: function set(field, messages) {
-      if (Errors__typeof(field) === 'object') {
-        this.errors = field;
-      } else {
-        this.set(_extends({}, this.errors, _defineProperty({}, field, arrayWrap(messages))));
-      }
-    }
-    /**
-     * Get all the errors.
-     *
-     * @return {Object}
-     */
-
-  }, {
-    key: "all",
-    value: function all() {
-      return this.errors;
-    }
-    /**
-     * Determine if there is an error for the given field.
-     *
-     * @param  {String} field
-     * @return {Boolean}
-     */
-
-  }, {
-    key: "has",
-    value: function has(field) {
-      return this.errors.hasOwnProperty(field);
-    }
-    /**
-     * Determine if there are any errors for the given fields.
-     *
-     * @param  {...String} fields
-     * @return {Boolean}
-     */
-
-  }, {
-    key: "hasAny",
-    value: function hasAny() {
-      var _this = this;
-
-      for (var _len = arguments.length, fields = new Array(_len), _key = 0; _key < _len; _key++) {
-        fields[_key] = arguments[_key];
-      }
-
-      return fields.some(function (field) {
-        return _this.has(field);
-      });
-    }
-    /**
-     * Determine if there are any errors.
-     *
-     * @return {Boolean}
-     */
-
-  }, {
-    key: "any",
-    value: function any() {
-      return Object.keys(this.errors).length > 0;
-    }
-    /**
-     * Get the first error message for the given field.
-     *
-     * @param  String} field
-     * @return {String|undefined}
-     */
-
-  }, {
-    key: "get",
-    value: function get(field) {
-      if (this.has(field)) {
-        return this.getAll(field)[0];
-      }
-    }
-    /**
-     * Get all the error messages for the given field.
-     *
-     * @param  {String} field
-     * @return {Array}
-     */
-
-  }, {
-    key: "getAll",
-    value: function getAll(field) {
-      return arrayWrap(this.errors[field] || []);
-    }
-    /**
-     * Get the error message for the given fields.
-     *
-     * @param  {...String} fields
-     * @return {Array}
-     */
-
-  }, {
-    key: "only",
-    value: function only() {
-      var _this2 = this;
-
-      var messages = [];
-
-      for (var _len2 = arguments.length, fields = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-        fields[_key2] = arguments[_key2];
-      }
-
-      fields.forEach(function (field) {
-        var message = _this2.get(field);
-
-        if (message) {
-          messages.push(message);
-        }
-      });
-      return messages;
-    }
-    /**
-     * Get all the errors in a flat array.
-     *
-     * @return {Array}
-     */
-
-  }, {
-    key: "flatten",
-    value: function flatten() {
-      return Object.values(this.errors).reduce(function (a, b) {
-        return a.concat(b);
-      }, []);
-    }
-    /**
-     * Clear one or all error fields.
-     *
-     * @param {String|undefined} field
-     */
-
-  }, {
-    key: "clear",
-    value: function clear(field) {
-      var _this3 = this;
-
-      var errors = {};
-
-      if (field) {
-        Object.keys(this.errors).forEach(function (key) {
-          if (key !== field) {
-            errors[key] = _this3.errors[key];
-          }
-        });
-      }
-
-      this.set(errors);
-    }
-  }]);
-
-  return Errors;
-}();
-
-
-// CONCATENATED MODULE: ./src/Form.js
-function Form__typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { Form__typeof = function _typeof(obj) { return typeof obj; }; } else { Form__typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return Form__typeof(obj); }
-
-function Form__defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-function Form__extends() { Form__extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return Form__extends.apply(this, arguments); }
-
-function Form__classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function Form__defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function Form__createClass(Constructor, protoProps, staticProps) { if (protoProps) Form__defineProperties(Constructor.prototype, protoProps); if (staticProps) Form__defineProperties(Constructor, staticProps); return Constructor; }
-
-
-
-
-
-var Form_Form =
-/*#__PURE__*/
-function () {
-  /**
-   * Create a new form instance.
-   *
-   * @param {Object} data
-   */
-  function Form() {
-    var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
-    Form__classCallCheck(this, Form);
-
-    this.busy = false;
-    this.successful = false;
-    this.errors = new Errors_Errors();
-    this.originalData = deepCopy(data);
-    Object.assign(this, data);
-  }
-  /**
-   * Fill form data.
-   *
-   * @param {Object} data
-   */
-
-
-  Form__createClass(Form, [{
-    key: "fill",
-    value: function fill(data) {
-      var _this = this;
-
-      this.keys().forEach(function (key) {
-        _this[key] = data[key];
-      });
-    }
-    /**
-     * Get the form data.
-     *
-     * @return {Object}
-     */
-
-  }, {
-    key: "data",
-    value: function data() {
-      var _this2 = this;
-
-      return this.keys().reduce(function (data, key) {
-        return Form__extends({}, data, Form__defineProperty({}, key, _this2[key]));
-      }, {});
-    }
-    /**
-     * Get the form data keys.
-     *
-     * @return {Array}
-     */
-
-  }, {
-    key: "keys",
-    value: function keys() {
-      return Object.keys(this).filter(function (key) {
-        return !Form.ignore.includes(key);
-      });
-    }
-    /**
-     * Start processing the form.
-     */
-
-  }, {
-    key: "startProcessing",
-    value: function startProcessing() {
-      this.errors.clear();
-      this.busy = true;
-      this.successful = false;
-    }
-    /**
-     * Finish processing the form.
-     */
-
-  }, {
-    key: "finishProcessing",
-    value: function finishProcessing() {
-      this.busy = false;
-      this.successful = true;
-    }
-    /**
-     * Clear the form errors.
-     */
-
-  }, {
-    key: "clear",
-    value: function clear() {
-      this.errors.clear();
-      this.successful = false;
-    }
-    /**
-     * Reset the form fields.
-     */
-
-  }, {
-    key: "reset",
-    value: function reset() {
-      var _this3 = this;
-
-      Object.keys(this).filter(function (key) {
-        return !Form.ignore.includes(key);
-      }).forEach(function (key) {
-        _this3[key] = deepCopy(_this3.originalData[key]);
-      });
-    }
-    /**
-     * Submit the from via a GET request.
-     *
-     * @param  {String} url
-     * @return {Promise}
-     */
-
-  }, {
-    key: "get",
-    value: function get(url) {
-      return this.submit('get', url);
-    }
-    /**
-     * Submit the from via a POST request.
-     *
-     * @param  {String} url
-     * @return {Promise}
-     */
-
-  }, {
-    key: "post",
-    value: function post(url) {
-      return this.submit('post', url);
-    }
-    /**
-     * Submit the from via a PATCH request.
-     *
-     * @param  {String} url
-     * @return {Promise}
-     */
-
-  }, {
-    key: "patch",
-    value: function patch(url) {
-      return this.submit('patch', url);
-    }
-    /**
-     * Submit the from via a PUT request.
-     *
-     * @param  {String} url
-     * @return {Promise}
-     */
-
-  }, {
-    key: "put",
-    value: function put(url) {
-      return this.submit('put', url);
-    }
-    /**
-     * Submit the from via a DELETE request.
-     *
-     * @param  {String} url
-     * @return {Promise}
-     */
-
-  }, {
-    key: "delete",
-    value: function _delete(url) {
-      return this.submit('delete', url);
-    }
-    /**
-     * Submit the form data via an HTTP request.
-     *
-     * @param  {String} method (get, post, patch, put)
-     * @param  {String} url
-     * @param  {Object} config (axios config)
-     * @return {Promise}
-     */
-
-  }, {
-    key: "submit",
-    value: function submit(method, url) {
-      var _this4 = this;
-
-      var config = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-      this.startProcessing();
-      var data = method === 'get' ? {
-        params: this.data()
-      } : this.data();
-      return new Promise(function (resolve, reject) {
-        external__axios__default.a.request(Form__extends({
-          url: _this4.route(url),
-          method: method,
-          data: data
-        }, config)).then(function (response) {
-          _this4.finishProcessing();
-
-          resolve(response);
-        }).catch(function (error) {
-          _this4.busy = false;
-
-          if (error.response) {
-            _this4.errors.set(_this4.extractErrors(error.response));
-          }
-
-          reject(error);
-        });
-      });
-    }
-    /**
-     * Extract the errors from the response object.
-     *
-     * @param  {Object} response
-     * @return {Object}
-     */
-
-  }, {
-    key: "extractErrors",
-    value: function extractErrors(response) {
-      if (!response.data || Form__typeof(response.data) !== 'object') {
-        return {
-          error: Form.errorMessage
-        };
-      }
-
-      if (response.data.errors) {
-        return Form__extends({}, response.data.errors);
-      }
-
-      if (response.data.message) {
-        return {
-          error: response.data.message
-        };
-      }
-
-      return Form__extends({}, response.data);
-    }
-    /**
-     * Get a named route.
-     *
-     * @param  {String} name
-     * @return {Object} parameters
-     * @return {String}
-     */
-
-  }, {
-    key: "route",
-    value: function route(name) {
-      var parameters = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-      var url = name;
-
-      if (Form.routes.hasOwnProperty(name)) {
-        url = decodeURI(Form.routes[name]);
-      }
-
-      if (Form__typeof(parameters) !== 'object') {
-        parameters = {
-          id: parameters
-        };
-      }
-
-      Object.keys(parameters).forEach(function (key) {
-        url = url.replace("{".concat(key, "}"), parameters[key]);
-      });
-      return url;
-    }
-    /**
-     * Clear errors on keydown.
-     *
-     * @param {KeyboardEvent} event
-     */
-
-  }, {
-    key: "onKeydown",
-    value: function onKeydown(event) {
-      if (event.target.name) {
-        this.errors.clear(event.target.name);
-      }
-    }
-  }]);
-
-  return Form;
-}();
-
-Form_Form.routes = {};
-Form_Form.errorMessage = 'Something went wrong. Please try again.';
-Form_Form.ignore = ['busy', 'successful', 'errors', 'originalData'];
-/* harmony default export */ var src_Form = (Form_Form);
-// CONCATENATED MODULE: ./node_modules/cache-loader/dist/cjs.js?{"cacheDirectory":"C://Users//Otinsoft//Code//github//vform//node_modules//.cache//cache-loader"}!./node_modules/babel-loader/lib!./node_modules/vue-loader/lib/selector.js?type=script&index=0!./src/components/HasError.vue
-//
-//
-//
-//
-/* harmony default export */ var HasError = ({
-  name: 'has-error',
-  props: {
-    form: {
-      type: Object,
-      required: true
-    },
-    field: {
-      type: String,
-      required: true
-    }
-  }
-});
-// CONCATENATED MODULE: ./node_modules/vue-loader/lib/template-compiler?{"id":"data-v-4389a6dd","hasScoped":false,"buble":{"transforms":{}}}!./node_modules/vue-loader/lib/selector.js?type=template&index=0!./src/components/HasError.vue
-var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return (_vm.form.errors.has(_vm.field))?_c('div',{staticClass:"help-block invalid-feedback",domProps:{"innerHTML":_vm._s(_vm.form.errors.get(_vm.field))}}):_vm._e()}
-var staticRenderFns = []
-
-// CONCATENATED MODULE: ./node_modules/vue-loader/lib/runtime/component-normalizer.js
-/* globals __VUE_SSR_CONTEXT__ */
-
-// IMPORTANT: Do NOT use ES2015 features in this file (except for modules).
-// This module is a runtime utility for cleaner component module output and will
-// be included in the final webpack user bundle.
-
-function normalizeComponent (
-  scriptExports,
-  render,
-  staticRenderFns,
-  functionalTemplate,
-  injectStyles,
-  scopeId,
-  moduleIdentifier, /* server only */
-  shadowMode /* vue-cli only */
-) {
-  scriptExports = scriptExports || {}
-
-  // ES6 modules interop
-  var type = typeof scriptExports.default
-  if (type === 'object' || type === 'function') {
-    scriptExports = scriptExports.default
-  }
-
-  // Vue.extend constructor export interop
-  var options = typeof scriptExports === 'function'
-    ? scriptExports.options
-    : scriptExports
-
-  // render functions
-  if (render) {
-    options.render = render
-    options.staticRenderFns = staticRenderFns
-    options._compiled = true
-  }
-
-  // functional template
-  if (functionalTemplate) {
-    options.functional = true
-  }
-
-  // scopedId
-  if (scopeId) {
-    options._scopeId = scopeId
-  }
-
-  var hook
-  if (moduleIdentifier) { // server build
-    hook = function (context) {
-      // 2.3 injection
-      context =
-        context || // cached call
-        (this.$vnode && this.$vnode.ssrContext) || // stateful
-        (this.parent && this.parent.$vnode && this.parent.$vnode.ssrContext) // functional
-      // 2.2 with runInNewContext: true
-      if (!context && typeof __VUE_SSR_CONTEXT__ !== 'undefined') {
-        context = __VUE_SSR_CONTEXT__
-      }
-      // inject component styles
-      if (injectStyles) {
-        injectStyles.call(this, context)
-      }
-      // register component module identifier for async chunk inferrence
-      if (context && context._registeredComponents) {
-        context._registeredComponents.add(moduleIdentifier)
-      }
-    }
-    // used by ssr in case component is cached and beforeCreate
-    // never gets called
-    options._ssrRegister = hook
-  } else if (injectStyles) {
-    hook = shadowMode
-      ? function () { injectStyles.call(this, this.$root.$options.shadowRoot) }
-      : injectStyles
-  }
-
-  if (hook) {
-    if (options.functional) {
-      // for template-only hot-reload because in that case the render fn doesn't
-      // go through the normalizer
-      options._injectStyles = hook
-      // register for functioal component in vue file
-      var originalRender = options.render
-      options.render = function renderWithStyleInjection (h, context) {
-        hook.call(context)
-        return originalRender(h, context)
-      }
-    } else {
-      // inject component registration as beforeCreate hook
-      var existing = options.beforeCreate
-      options.beforeCreate = existing
-        ? [].concat(existing, hook)
-        : [hook]
-    }
-  }
-
-  return {
-    exports: scriptExports,
-    options: options
-  }
-}
-
-// CONCATENATED MODULE: ./src/components/HasError.vue
-/* script */
-
-
-/* template */
-
-/* template functional */
-var __vue_template_functional__ = false
-/* styles */
-var __vue_styles__ = null
-/* scopeId */
-var __vue_scopeId__ = null
-/* moduleIdentifier (server only) */
-var __vue_module_identifier__ = null
-
-var Component = normalizeComponent(
-  HasError,
-  render,
-  staticRenderFns,
-  __vue_template_functional__,
-  __vue_styles__,
-  __vue_scopeId__,
-  __vue_module_identifier__
-)
-
-/* harmony default export */ var components_HasError = (Component.exports);
-
-// CONCATENATED MODULE: ./src/components/Alert.js
-/* harmony default export */ var Alert = ({
-  props: {
-    form: {
-      type: Object,
-      required: true
-    },
-    dismissible: {
-      type: Boolean,
-      default: true
-    }
-  },
-  methods: {
-    dismiss: function dismiss() {
-      if (this.dismissible) {
-        this.form.clear();
-      }
-    }
-  }
-});
-// CONCATENATED MODULE: ./node_modules/cache-loader/dist/cjs.js?{"cacheDirectory":"C://Users//Otinsoft//Code//github//vform//node_modules//.cache//cache-loader"}!./node_modules/babel-loader/lib!./node_modules/vue-loader/lib/selector.js?type=script&index=0!./src/components/AlertError.vue
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-
-/* harmony default export */ var AlertError = ({
-  name: 'alert-error',
-  extends: Alert,
-  props: {
-    message: {
-      type: String,
-      default: 'There were some problems with your input.'
-    }
-  }
-});
-// CONCATENATED MODULE: ./node_modules/vue-loader/lib/template-compiler?{"id":"data-v-e73aa7c8","hasScoped":false,"buble":{"transforms":{}}}!./node_modules/vue-loader/lib/selector.js?type=template&index=0!./src/components/AlertError.vue
-var AlertError_render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return (_vm.form.errors.any())?_c('div',{staticClass:"alert alert-danger alert-dismissible",attrs:{"role":"alert"}},[(_vm.dismissible)?_c('button',{staticClass:"close",attrs:{"type":"button","aria-label":"Close"},on:{"click":_vm.dismiss}},[_c('span',{attrs:{"aria-hidden":"true"}},[_vm._v("×")])]):_vm._e(),_vm._v(" "),_vm._t("default",[(_vm.form.errors.has('error'))?_c('div',{domProps:{"innerHTML":_vm._s(_vm.form.errors.get('error'))}}):_c('div',{domProps:{"innerHTML":_vm._s(_vm.message)}})])],2):_vm._e()}
-var AlertError_staticRenderFns = []
-
-// CONCATENATED MODULE: ./src/components/AlertError.vue
-/* script */
-
-
-/* template */
-
-/* template functional */
-var AlertError___vue_template_functional__ = false
-/* styles */
-var AlertError___vue_styles__ = null
-/* scopeId */
-var AlertError___vue_scopeId__ = null
-/* moduleIdentifier (server only) */
-var AlertError___vue_module_identifier__ = null
-
-var AlertError_Component = normalizeComponent(
-  AlertError,
-  AlertError_render,
-  AlertError_staticRenderFns,
-  AlertError___vue_template_functional__,
-  AlertError___vue_styles__,
-  AlertError___vue_scopeId__,
-  AlertError___vue_module_identifier__
-)
-
-/* harmony default export */ var components_AlertError = (AlertError_Component.exports);
-
-// CONCATENATED MODULE: ./node_modules/cache-loader/dist/cjs.js?{"cacheDirectory":"C://Users//Otinsoft//Code//github//vform//node_modules//.cache//cache-loader"}!./node_modules/babel-loader/lib!./node_modules/vue-loader/lib/selector.js?type=script&index=0!./src/components/AlertErrors.vue
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-
-/* harmony default export */ var AlertErrors = ({
-  name: 'alert-errors',
-  extends: Alert,
-  props: {
-    message: {
-      type: String,
-      default: 'There were some problems with your input.'
-    }
-  }
-});
-// CONCATENATED MODULE: ./node_modules/vue-loader/lib/template-compiler?{"id":"data-v-422a6591","hasScoped":false,"buble":{"transforms":{}}}!./node_modules/vue-loader/lib/selector.js?type=template&index=0!./src/components/AlertErrors.vue
-var AlertErrors_render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return (_vm.form.errors.any())?_c('div',{staticClass:"alert alert-danger alert-dismissible",attrs:{"role":"alert"}},[(_vm.dismissible)?_c('button',{staticClass:"close",attrs:{"type":"button","aria-label":"Close"},on:{"click":_vm.dismiss}},[_c('span',{attrs:{"aria-hidden":"true"}},[_vm._v("×")])]):_vm._e(),_vm._v(" "),(_vm.message)?_c('div',{domProps:{"innerHTML":_vm._s(_vm.message)}}):_vm._e(),_vm._v(" "),_c('ul',_vm._l((_vm.form.errors.flatten()),function(error){return _c('li',{domProps:{"innerHTML":_vm._s(error)}})}))]):_vm._e()}
-var AlertErrors_staticRenderFns = []
-
-// CONCATENATED MODULE: ./src/components/AlertErrors.vue
-/* script */
-
-
-/* template */
-
-/* template functional */
-var AlertErrors___vue_template_functional__ = false
-/* styles */
-var AlertErrors___vue_styles__ = null
-/* scopeId */
-var AlertErrors___vue_scopeId__ = null
-/* moduleIdentifier (server only) */
-var AlertErrors___vue_module_identifier__ = null
-
-var AlertErrors_Component = normalizeComponent(
-  AlertErrors,
-  AlertErrors_render,
-  AlertErrors_staticRenderFns,
-  AlertErrors___vue_template_functional__,
-  AlertErrors___vue_styles__,
-  AlertErrors___vue_scopeId__,
-  AlertErrors___vue_module_identifier__
-)
-
-/* harmony default export */ var components_AlertErrors = (AlertErrors_Component.exports);
-
-// CONCATENATED MODULE: ./node_modules/cache-loader/dist/cjs.js?{"cacheDirectory":"C://Users//Otinsoft//Code//github//vform//node_modules//.cache//cache-loader"}!./node_modules/babel-loader/lib!./node_modules/vue-loader/lib/selector.js?type=script&index=0!./src/components/AlertSuccess.vue
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-
-/* harmony default export */ var AlertSuccess = ({
-  name: 'alert-success',
-  extends: Alert,
-  props: {
-    message: {
-      type: String,
-      default: ''
-    }
-  }
-});
-// CONCATENATED MODULE: ./node_modules/vue-loader/lib/template-compiler?{"id":"data-v-0afdb8a8","hasScoped":false,"buble":{"transforms":{}}}!./node_modules/vue-loader/lib/selector.js?type=template&index=0!./src/components/AlertSuccess.vue
-var AlertSuccess_render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return (_vm.form.successful)?_c('div',{staticClass:"alert alert-success alert-dismissible",attrs:{"role":"alert"}},[(_vm.dismissible)?_c('button',{staticClass:"close",attrs:{"type":"button","aria-label":"Close"},on:{"click":_vm.dismiss}},[_c('span',{attrs:{"aria-hidden":"true"}},[_vm._v("×")])]):_vm._e(),_vm._v(" "),_vm._t("default",[_c('div',{domProps:{"innerHTML":_vm._s(_vm.message)}})])],2):_vm._e()}
-var AlertSuccess_staticRenderFns = []
-
-// CONCATENATED MODULE: ./src/components/AlertSuccess.vue
-/* script */
-
-
-/* template */
-
-/* template functional */
-var AlertSuccess___vue_template_functional__ = false
-/* styles */
-var AlertSuccess___vue_styles__ = null
-/* scopeId */
-var AlertSuccess___vue_scopeId__ = null
-/* moduleIdentifier (server only) */
-var AlertSuccess___vue_module_identifier__ = null
-
-var AlertSuccess_Component = normalizeComponent(
-  AlertSuccess,
-  AlertSuccess_render,
-  AlertSuccess_staticRenderFns,
-  AlertSuccess___vue_template_functional__,
-  AlertSuccess___vue_styles__,
-  AlertSuccess___vue_scopeId__,
-  AlertSuccess___vue_module_identifier__
-)
-
-/* harmony default export */ var components_AlertSuccess = (AlertSuccess_Component.exports);
-
-// CONCATENATED MODULE: ./src/index.js
-/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "Form", function() { return src_Form; });
-/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "Errors", function() { return Errors_Errors; });
-/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "HasError", function() { return components_HasError; });
-/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "AlertError", function() { return components_AlertError; });
-/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "AlertErrors", function() { return components_AlertErrors; });
-/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "AlertSuccess", function() { return components_AlertSuccess; });
-/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "default", function() { return src_Form; });
-
-
-
-
-
-
-
-
-/***/ })
-
-/******/ });
-
-/***/ }),
-/* 170 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -69110,6 +68145,989 @@ if (typeof window !== 'undefined' && window.Sweetalert2){  window.Sweetalert2.ve
 "      position: initial !important; } }");
 
 /***/ }),
+/* 170 */
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports =
+/******/ (function(modules) { // webpackBootstrap
+/******/ 	// The module cache
+/******/ 	var installedModules = {};
+/******/
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/
+/******/ 		// Check if module is in cache
+/******/ 		if(installedModules[moduleId]) {
+/******/ 			return installedModules[moduleId].exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = installedModules[moduleId] = {
+/******/ 			i: moduleId,
+/******/ 			l: false,
+/******/ 			exports: {}
+/******/ 		};
+/******/
+/******/ 		// Execute the module function
+/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+/******/
+/******/ 		// Flag the module as loaded
+/******/ 		module.l = true;
+/******/
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/
+/******/
+/******/ 	// expose the modules object (__webpack_modules__)
+/******/ 	__webpack_require__.m = modules;
+/******/
+/******/ 	// expose the module cache
+/******/ 	__webpack_require__.c = installedModules;
+/******/
+/******/ 	// define getter function for harmony exports
+/******/ 	__webpack_require__.d = function(exports, name, getter) {
+/******/ 		if(!__webpack_require__.o(exports, name)) {
+/******/ 			Object.defineProperty(exports, name, {
+/******/ 				configurable: false,
+/******/ 				enumerable: true,
+/******/ 				get: getter
+/******/ 			});
+/******/ 		}
+/******/ 	};
+/******/
+/******/ 	// getDefaultExport function for compatibility with non-harmony modules
+/******/ 	__webpack_require__.n = function(module) {
+/******/ 		var getter = module && module.__esModule ?
+/******/ 			function getDefault() { return module['default']; } :
+/******/ 			function getModuleExports() { return module; };
+/******/ 		__webpack_require__.d(getter, 'a', getter);
+/******/ 		return getter;
+/******/ 	};
+/******/
+/******/ 	// Object.prototype.hasOwnProperty.call
+/******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
+/******/
+/******/ 	// __webpack_public_path__
+/******/ 	__webpack_require__.p = "./";
+/******/
+/******/ 	// Load entry module and return exports
+/******/ 	return __webpack_require__(__webpack_require__.s = 0);
+/******/ })
+/************************************************************************/
+/******/ ({
+
+/***/ 0:
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__("lVK7");
+
+
+/***/ }),
+
+/***/ "OMN4":
+/***/ (function(module, exports) {
+
+module.exports = __webpack_require__(10);
+
+/***/ }),
+
+/***/ "lVK7":
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+
+// EXTERNAL MODULE: external "axios"
+var external__axios_ = __webpack_require__("OMN4");
+var external__axios__default = /*#__PURE__*/__webpack_require__.n(external__axios_);
+
+// CONCATENATED MODULE: ./src/util.js
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
+/**
+ * Deep copy the given object.
+ *
+ * @param  {Object} obj
+ * @return {Object}
+ */
+function deepCopy(obj) {
+  if (obj === null || _typeof(obj) !== 'object') {
+    return obj;
+  }
+
+  var copy = Array.isArray(obj) ? [] : {};
+  Object.keys(obj).forEach(function (key) {
+    copy[key] = deepCopy(obj[key]);
+  });
+  return copy;
+}
+/**
+ * If the given value is not an array, wrap it in one.
+ *
+ * @param  {Any} value
+ * @return {Array}
+ */
+
+function arrayWrap(value) {
+  return Array.isArray(value) ? value : [value];
+}
+// CONCATENATED MODULE: ./src/Errors.js
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
+
+function Errors__typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { Errors__typeof = function _typeof(obj) { return typeof obj; }; } else { Errors__typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return Errors__typeof(obj); }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+
+
+var Errors_Errors =
+/*#__PURE__*/
+function () {
+  /**
+   * Create a new error bag instance.
+   */
+  function Errors() {
+    _classCallCheck(this, Errors);
+
+    this.errors = {};
+  }
+  /**
+   * Set the errors object or field error messages.
+   *
+   * @param {Object|String} field
+   * @param {Array|String|undefined} messages
+   */
+
+
+  _createClass(Errors, [{
+    key: "set",
+    value: function set(field, messages) {
+      if (Errors__typeof(field) === 'object') {
+        this.errors = field;
+      } else {
+        this.set(_extends({}, this.errors, _defineProperty({}, field, arrayWrap(messages))));
+      }
+    }
+    /**
+     * Get all the errors.
+     *
+     * @return {Object}
+     */
+
+  }, {
+    key: "all",
+    value: function all() {
+      return this.errors;
+    }
+    /**
+     * Determine if there is an error for the given field.
+     *
+     * @param  {String} field
+     * @return {Boolean}
+     */
+
+  }, {
+    key: "has",
+    value: function has(field) {
+      return this.errors.hasOwnProperty(field);
+    }
+    /**
+     * Determine if there are any errors for the given fields.
+     *
+     * @param  {...String} fields
+     * @return {Boolean}
+     */
+
+  }, {
+    key: "hasAny",
+    value: function hasAny() {
+      var _this = this;
+
+      for (var _len = arguments.length, fields = new Array(_len), _key = 0; _key < _len; _key++) {
+        fields[_key] = arguments[_key];
+      }
+
+      return fields.some(function (field) {
+        return _this.has(field);
+      });
+    }
+    /**
+     * Determine if there are any errors.
+     *
+     * @return {Boolean}
+     */
+
+  }, {
+    key: "any",
+    value: function any() {
+      return Object.keys(this.errors).length > 0;
+    }
+    /**
+     * Get the first error message for the given field.
+     *
+     * @param  String} field
+     * @return {String|undefined}
+     */
+
+  }, {
+    key: "get",
+    value: function get(field) {
+      if (this.has(field)) {
+        return this.getAll(field)[0];
+      }
+    }
+    /**
+     * Get all the error messages for the given field.
+     *
+     * @param  {String} field
+     * @return {Array}
+     */
+
+  }, {
+    key: "getAll",
+    value: function getAll(field) {
+      return arrayWrap(this.errors[field] || []);
+    }
+    /**
+     * Get the error message for the given fields.
+     *
+     * @param  {...String} fields
+     * @return {Array}
+     */
+
+  }, {
+    key: "only",
+    value: function only() {
+      var _this2 = this;
+
+      var messages = [];
+
+      for (var _len2 = arguments.length, fields = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+        fields[_key2] = arguments[_key2];
+      }
+
+      fields.forEach(function (field) {
+        var message = _this2.get(field);
+
+        if (message) {
+          messages.push(message);
+        }
+      });
+      return messages;
+    }
+    /**
+     * Get all the errors in a flat array.
+     *
+     * @return {Array}
+     */
+
+  }, {
+    key: "flatten",
+    value: function flatten() {
+      return Object.values(this.errors).reduce(function (a, b) {
+        return a.concat(b);
+      }, []);
+    }
+    /**
+     * Clear one or all error fields.
+     *
+     * @param {String|undefined} field
+     */
+
+  }, {
+    key: "clear",
+    value: function clear(field) {
+      var _this3 = this;
+
+      var errors = {};
+
+      if (field) {
+        Object.keys(this.errors).forEach(function (key) {
+          if (key !== field) {
+            errors[key] = _this3.errors[key];
+          }
+        });
+      }
+
+      this.set(errors);
+    }
+  }]);
+
+  return Errors;
+}();
+
+
+// CONCATENATED MODULE: ./src/Form.js
+function Form__typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { Form__typeof = function _typeof(obj) { return typeof obj; }; } else { Form__typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return Form__typeof(obj); }
+
+function Form__defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+function Form__extends() { Form__extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return Form__extends.apply(this, arguments); }
+
+function Form__classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function Form__defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function Form__createClass(Constructor, protoProps, staticProps) { if (protoProps) Form__defineProperties(Constructor.prototype, protoProps); if (staticProps) Form__defineProperties(Constructor, staticProps); return Constructor; }
+
+
+
+
+
+var Form_Form =
+/*#__PURE__*/
+function () {
+  /**
+   * Create a new form instance.
+   *
+   * @param {Object} data
+   */
+  function Form() {
+    var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+    Form__classCallCheck(this, Form);
+
+    this.busy = false;
+    this.successful = false;
+    this.errors = new Errors_Errors();
+    this.originalData = deepCopy(data);
+    Object.assign(this, data);
+  }
+  /**
+   * Fill form data.
+   *
+   * @param {Object} data
+   */
+
+
+  Form__createClass(Form, [{
+    key: "fill",
+    value: function fill(data) {
+      var _this = this;
+
+      this.keys().forEach(function (key) {
+        _this[key] = data[key];
+      });
+    }
+    /**
+     * Get the form data.
+     *
+     * @return {Object}
+     */
+
+  }, {
+    key: "data",
+    value: function data() {
+      var _this2 = this;
+
+      return this.keys().reduce(function (data, key) {
+        return Form__extends({}, data, Form__defineProperty({}, key, _this2[key]));
+      }, {});
+    }
+    /**
+     * Get the form data keys.
+     *
+     * @return {Array}
+     */
+
+  }, {
+    key: "keys",
+    value: function keys() {
+      return Object.keys(this).filter(function (key) {
+        return !Form.ignore.includes(key);
+      });
+    }
+    /**
+     * Start processing the form.
+     */
+
+  }, {
+    key: "startProcessing",
+    value: function startProcessing() {
+      this.errors.clear();
+      this.busy = true;
+      this.successful = false;
+    }
+    /**
+     * Finish processing the form.
+     */
+
+  }, {
+    key: "finishProcessing",
+    value: function finishProcessing() {
+      this.busy = false;
+      this.successful = true;
+    }
+    /**
+     * Clear the form errors.
+     */
+
+  }, {
+    key: "clear",
+    value: function clear() {
+      this.errors.clear();
+      this.successful = false;
+    }
+    /**
+     * Reset the form fields.
+     */
+
+  }, {
+    key: "reset",
+    value: function reset() {
+      var _this3 = this;
+
+      Object.keys(this).filter(function (key) {
+        return !Form.ignore.includes(key);
+      }).forEach(function (key) {
+        _this3[key] = deepCopy(_this3.originalData[key]);
+      });
+    }
+    /**
+     * Submit the from via a GET request.
+     *
+     * @param  {String} url
+     * @return {Promise}
+     */
+
+  }, {
+    key: "get",
+    value: function get(url) {
+      return this.submit('get', url);
+    }
+    /**
+     * Submit the from via a POST request.
+     *
+     * @param  {String} url
+     * @return {Promise}
+     */
+
+  }, {
+    key: "post",
+    value: function post(url) {
+      return this.submit('post', url);
+    }
+    /**
+     * Submit the from via a PATCH request.
+     *
+     * @param  {String} url
+     * @return {Promise}
+     */
+
+  }, {
+    key: "patch",
+    value: function patch(url) {
+      return this.submit('patch', url);
+    }
+    /**
+     * Submit the from via a PUT request.
+     *
+     * @param  {String} url
+     * @return {Promise}
+     */
+
+  }, {
+    key: "put",
+    value: function put(url) {
+      return this.submit('put', url);
+    }
+    /**
+     * Submit the from via a DELETE request.
+     *
+     * @param  {String} url
+     * @return {Promise}
+     */
+
+  }, {
+    key: "delete",
+    value: function _delete(url) {
+      return this.submit('delete', url);
+    }
+    /**
+     * Submit the form data via an HTTP request.
+     *
+     * @param  {String} method (get, post, patch, put)
+     * @param  {String} url
+     * @param  {Object} config (axios config)
+     * @return {Promise}
+     */
+
+  }, {
+    key: "submit",
+    value: function submit(method, url) {
+      var _this4 = this;
+
+      var config = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+      this.startProcessing();
+      var data = method === 'get' ? {
+        params: this.data()
+      } : this.data();
+      return new Promise(function (resolve, reject) {
+        external__axios__default.a.request(Form__extends({
+          url: _this4.route(url),
+          method: method,
+          data: data
+        }, config)).then(function (response) {
+          _this4.finishProcessing();
+
+          resolve(response);
+        }).catch(function (error) {
+          _this4.busy = false;
+
+          if (error.response) {
+            _this4.errors.set(_this4.extractErrors(error.response));
+          }
+
+          reject(error);
+        });
+      });
+    }
+    /**
+     * Extract the errors from the response object.
+     *
+     * @param  {Object} response
+     * @return {Object}
+     */
+
+  }, {
+    key: "extractErrors",
+    value: function extractErrors(response) {
+      if (!response.data || Form__typeof(response.data) !== 'object') {
+        return {
+          error: Form.errorMessage
+        };
+      }
+
+      if (response.data.errors) {
+        return Form__extends({}, response.data.errors);
+      }
+
+      if (response.data.message) {
+        return {
+          error: response.data.message
+        };
+      }
+
+      return Form__extends({}, response.data);
+    }
+    /**
+     * Get a named route.
+     *
+     * @param  {String} name
+     * @return {Object} parameters
+     * @return {String}
+     */
+
+  }, {
+    key: "route",
+    value: function route(name) {
+      var parameters = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+      var url = name;
+
+      if (Form.routes.hasOwnProperty(name)) {
+        url = decodeURI(Form.routes[name]);
+      }
+
+      if (Form__typeof(parameters) !== 'object') {
+        parameters = {
+          id: parameters
+        };
+      }
+
+      Object.keys(parameters).forEach(function (key) {
+        url = url.replace("{".concat(key, "}"), parameters[key]);
+      });
+      return url;
+    }
+    /**
+     * Clear errors on keydown.
+     *
+     * @param {KeyboardEvent} event
+     */
+
+  }, {
+    key: "onKeydown",
+    value: function onKeydown(event) {
+      if (event.target.name) {
+        this.errors.clear(event.target.name);
+      }
+    }
+  }]);
+
+  return Form;
+}();
+
+Form_Form.routes = {};
+Form_Form.errorMessage = 'Something went wrong. Please try again.';
+Form_Form.ignore = ['busy', 'successful', 'errors', 'originalData'];
+/* harmony default export */ var src_Form = (Form_Form);
+// CONCATENATED MODULE: ./node_modules/cache-loader/dist/cjs.js?{"cacheDirectory":"C://Users//Otinsoft//Code//github//vform//node_modules//.cache//cache-loader"}!./node_modules/babel-loader/lib!./node_modules/vue-loader/lib/selector.js?type=script&index=0!./src/components/HasError.vue
+//
+//
+//
+//
+/* harmony default export */ var HasError = ({
+  name: 'has-error',
+  props: {
+    form: {
+      type: Object,
+      required: true
+    },
+    field: {
+      type: String,
+      required: true
+    }
+  }
+});
+// CONCATENATED MODULE: ./node_modules/vue-loader/lib/template-compiler?{"id":"data-v-4389a6dd","hasScoped":false,"buble":{"transforms":{}}}!./node_modules/vue-loader/lib/selector.js?type=template&index=0!./src/components/HasError.vue
+var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return (_vm.form.errors.has(_vm.field))?_c('div',{staticClass:"help-block invalid-feedback",domProps:{"innerHTML":_vm._s(_vm.form.errors.get(_vm.field))}}):_vm._e()}
+var staticRenderFns = []
+
+// CONCATENATED MODULE: ./node_modules/vue-loader/lib/runtime/component-normalizer.js
+/* globals __VUE_SSR_CONTEXT__ */
+
+// IMPORTANT: Do NOT use ES2015 features in this file (except for modules).
+// This module is a runtime utility for cleaner component module output and will
+// be included in the final webpack user bundle.
+
+function normalizeComponent (
+  scriptExports,
+  render,
+  staticRenderFns,
+  functionalTemplate,
+  injectStyles,
+  scopeId,
+  moduleIdentifier, /* server only */
+  shadowMode /* vue-cli only */
+) {
+  scriptExports = scriptExports || {}
+
+  // ES6 modules interop
+  var type = typeof scriptExports.default
+  if (type === 'object' || type === 'function') {
+    scriptExports = scriptExports.default
+  }
+
+  // Vue.extend constructor export interop
+  var options = typeof scriptExports === 'function'
+    ? scriptExports.options
+    : scriptExports
+
+  // render functions
+  if (render) {
+    options.render = render
+    options.staticRenderFns = staticRenderFns
+    options._compiled = true
+  }
+
+  // functional template
+  if (functionalTemplate) {
+    options.functional = true
+  }
+
+  // scopedId
+  if (scopeId) {
+    options._scopeId = scopeId
+  }
+
+  var hook
+  if (moduleIdentifier) { // server build
+    hook = function (context) {
+      // 2.3 injection
+      context =
+        context || // cached call
+        (this.$vnode && this.$vnode.ssrContext) || // stateful
+        (this.parent && this.parent.$vnode && this.parent.$vnode.ssrContext) // functional
+      // 2.2 with runInNewContext: true
+      if (!context && typeof __VUE_SSR_CONTEXT__ !== 'undefined') {
+        context = __VUE_SSR_CONTEXT__
+      }
+      // inject component styles
+      if (injectStyles) {
+        injectStyles.call(this, context)
+      }
+      // register component module identifier for async chunk inferrence
+      if (context && context._registeredComponents) {
+        context._registeredComponents.add(moduleIdentifier)
+      }
+    }
+    // used by ssr in case component is cached and beforeCreate
+    // never gets called
+    options._ssrRegister = hook
+  } else if (injectStyles) {
+    hook = shadowMode
+      ? function () { injectStyles.call(this, this.$root.$options.shadowRoot) }
+      : injectStyles
+  }
+
+  if (hook) {
+    if (options.functional) {
+      // for template-only hot-reload because in that case the render fn doesn't
+      // go through the normalizer
+      options._injectStyles = hook
+      // register for functioal component in vue file
+      var originalRender = options.render
+      options.render = function renderWithStyleInjection (h, context) {
+        hook.call(context)
+        return originalRender(h, context)
+      }
+    } else {
+      // inject component registration as beforeCreate hook
+      var existing = options.beforeCreate
+      options.beforeCreate = existing
+        ? [].concat(existing, hook)
+        : [hook]
+    }
+  }
+
+  return {
+    exports: scriptExports,
+    options: options
+  }
+}
+
+// CONCATENATED MODULE: ./src/components/HasError.vue
+/* script */
+
+
+/* template */
+
+/* template functional */
+var __vue_template_functional__ = false
+/* styles */
+var __vue_styles__ = null
+/* scopeId */
+var __vue_scopeId__ = null
+/* moduleIdentifier (server only) */
+var __vue_module_identifier__ = null
+
+var Component = normalizeComponent(
+  HasError,
+  render,
+  staticRenderFns,
+  __vue_template_functional__,
+  __vue_styles__,
+  __vue_scopeId__,
+  __vue_module_identifier__
+)
+
+/* harmony default export */ var components_HasError = (Component.exports);
+
+// CONCATENATED MODULE: ./src/components/Alert.js
+/* harmony default export */ var Alert = ({
+  props: {
+    form: {
+      type: Object,
+      required: true
+    },
+    dismissible: {
+      type: Boolean,
+      default: true
+    }
+  },
+  methods: {
+    dismiss: function dismiss() {
+      if (this.dismissible) {
+        this.form.clear();
+      }
+    }
+  }
+});
+// CONCATENATED MODULE: ./node_modules/cache-loader/dist/cjs.js?{"cacheDirectory":"C://Users//Otinsoft//Code//github//vform//node_modules//.cache//cache-loader"}!./node_modules/babel-loader/lib!./node_modules/vue-loader/lib/selector.js?type=script&index=0!./src/components/AlertError.vue
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+/* harmony default export */ var AlertError = ({
+  name: 'alert-error',
+  extends: Alert,
+  props: {
+    message: {
+      type: String,
+      default: 'There were some problems with your input.'
+    }
+  }
+});
+// CONCATENATED MODULE: ./node_modules/vue-loader/lib/template-compiler?{"id":"data-v-e73aa7c8","hasScoped":false,"buble":{"transforms":{}}}!./node_modules/vue-loader/lib/selector.js?type=template&index=0!./src/components/AlertError.vue
+var AlertError_render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return (_vm.form.errors.any())?_c('div',{staticClass:"alert alert-danger alert-dismissible",attrs:{"role":"alert"}},[(_vm.dismissible)?_c('button',{staticClass:"close",attrs:{"type":"button","aria-label":"Close"},on:{"click":_vm.dismiss}},[_c('span',{attrs:{"aria-hidden":"true"}},[_vm._v("×")])]):_vm._e(),_vm._v(" "),_vm._t("default",[(_vm.form.errors.has('error'))?_c('div',{domProps:{"innerHTML":_vm._s(_vm.form.errors.get('error'))}}):_c('div',{domProps:{"innerHTML":_vm._s(_vm.message)}})])],2):_vm._e()}
+var AlertError_staticRenderFns = []
+
+// CONCATENATED MODULE: ./src/components/AlertError.vue
+/* script */
+
+
+/* template */
+
+/* template functional */
+var AlertError___vue_template_functional__ = false
+/* styles */
+var AlertError___vue_styles__ = null
+/* scopeId */
+var AlertError___vue_scopeId__ = null
+/* moduleIdentifier (server only) */
+var AlertError___vue_module_identifier__ = null
+
+var AlertError_Component = normalizeComponent(
+  AlertError,
+  AlertError_render,
+  AlertError_staticRenderFns,
+  AlertError___vue_template_functional__,
+  AlertError___vue_styles__,
+  AlertError___vue_scopeId__,
+  AlertError___vue_module_identifier__
+)
+
+/* harmony default export */ var components_AlertError = (AlertError_Component.exports);
+
+// CONCATENATED MODULE: ./node_modules/cache-loader/dist/cjs.js?{"cacheDirectory":"C://Users//Otinsoft//Code//github//vform//node_modules//.cache//cache-loader"}!./node_modules/babel-loader/lib!./node_modules/vue-loader/lib/selector.js?type=script&index=0!./src/components/AlertErrors.vue
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+/* harmony default export */ var AlertErrors = ({
+  name: 'alert-errors',
+  extends: Alert,
+  props: {
+    message: {
+      type: String,
+      default: 'There were some problems with your input.'
+    }
+  }
+});
+// CONCATENATED MODULE: ./node_modules/vue-loader/lib/template-compiler?{"id":"data-v-422a6591","hasScoped":false,"buble":{"transforms":{}}}!./node_modules/vue-loader/lib/selector.js?type=template&index=0!./src/components/AlertErrors.vue
+var AlertErrors_render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return (_vm.form.errors.any())?_c('div',{staticClass:"alert alert-danger alert-dismissible",attrs:{"role":"alert"}},[(_vm.dismissible)?_c('button',{staticClass:"close",attrs:{"type":"button","aria-label":"Close"},on:{"click":_vm.dismiss}},[_c('span',{attrs:{"aria-hidden":"true"}},[_vm._v("×")])]):_vm._e(),_vm._v(" "),(_vm.message)?_c('div',{domProps:{"innerHTML":_vm._s(_vm.message)}}):_vm._e(),_vm._v(" "),_c('ul',_vm._l((_vm.form.errors.flatten()),function(error){return _c('li',{domProps:{"innerHTML":_vm._s(error)}})}))]):_vm._e()}
+var AlertErrors_staticRenderFns = []
+
+// CONCATENATED MODULE: ./src/components/AlertErrors.vue
+/* script */
+
+
+/* template */
+
+/* template functional */
+var AlertErrors___vue_template_functional__ = false
+/* styles */
+var AlertErrors___vue_styles__ = null
+/* scopeId */
+var AlertErrors___vue_scopeId__ = null
+/* moduleIdentifier (server only) */
+var AlertErrors___vue_module_identifier__ = null
+
+var AlertErrors_Component = normalizeComponent(
+  AlertErrors,
+  AlertErrors_render,
+  AlertErrors_staticRenderFns,
+  AlertErrors___vue_template_functional__,
+  AlertErrors___vue_styles__,
+  AlertErrors___vue_scopeId__,
+  AlertErrors___vue_module_identifier__
+)
+
+/* harmony default export */ var components_AlertErrors = (AlertErrors_Component.exports);
+
+// CONCATENATED MODULE: ./node_modules/cache-loader/dist/cjs.js?{"cacheDirectory":"C://Users//Otinsoft//Code//github//vform//node_modules//.cache//cache-loader"}!./node_modules/babel-loader/lib!./node_modules/vue-loader/lib/selector.js?type=script&index=0!./src/components/AlertSuccess.vue
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+/* harmony default export */ var AlertSuccess = ({
+  name: 'alert-success',
+  extends: Alert,
+  props: {
+    message: {
+      type: String,
+      default: ''
+    }
+  }
+});
+// CONCATENATED MODULE: ./node_modules/vue-loader/lib/template-compiler?{"id":"data-v-0afdb8a8","hasScoped":false,"buble":{"transforms":{}}}!./node_modules/vue-loader/lib/selector.js?type=template&index=0!./src/components/AlertSuccess.vue
+var AlertSuccess_render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return (_vm.form.successful)?_c('div',{staticClass:"alert alert-success alert-dismissible",attrs:{"role":"alert"}},[(_vm.dismissible)?_c('button',{staticClass:"close",attrs:{"type":"button","aria-label":"Close"},on:{"click":_vm.dismiss}},[_c('span',{attrs:{"aria-hidden":"true"}},[_vm._v("×")])]):_vm._e(),_vm._v(" "),_vm._t("default",[_c('div',{domProps:{"innerHTML":_vm._s(_vm.message)}})])],2):_vm._e()}
+var AlertSuccess_staticRenderFns = []
+
+// CONCATENATED MODULE: ./src/components/AlertSuccess.vue
+/* script */
+
+
+/* template */
+
+/* template functional */
+var AlertSuccess___vue_template_functional__ = false
+/* styles */
+var AlertSuccess___vue_styles__ = null
+/* scopeId */
+var AlertSuccess___vue_scopeId__ = null
+/* moduleIdentifier (server only) */
+var AlertSuccess___vue_module_identifier__ = null
+
+var AlertSuccess_Component = normalizeComponent(
+  AlertSuccess,
+  AlertSuccess_render,
+  AlertSuccess_staticRenderFns,
+  AlertSuccess___vue_template_functional__,
+  AlertSuccess___vue_styles__,
+  AlertSuccess___vue_scopeId__,
+  AlertSuccess___vue_module_identifier__
+)
+
+/* harmony default export */ var components_AlertSuccess = (AlertSuccess_Component.exports);
+
+// CONCATENATED MODULE: ./src/index.js
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "Form", function() { return src_Form; });
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "Errors", function() { return Errors_Errors; });
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "HasError", function() { return components_HasError; });
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "AlertError", function() { return components_AlertError; });
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "AlertErrors", function() { return components_AlertErrors; });
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "AlertSuccess", function() { return components_AlertSuccess; });
+/* concated harmony reexport */__webpack_require__.d(__webpack_exports__, "default", function() { return src_Form; });
+
+
+
+
+
+
+
+
+/***/ })
+
+/******/ });
+
+/***/ }),
 /* 171 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -71751,7 +71769,7 @@ if (inBrowser && window.Vue) {
 /***/ (function(module, exports, __webpack_require__) {
 
 var disposed = false
-var normalizeComponent = __webpack_require__(2)
+var normalizeComponent = __webpack_require__(1)
 /* script */
 var __vue_script__ = __webpack_require__(174)
 /* template */
@@ -71845,7 +71863,7 @@ if (false) {
 /***/ (function(module, exports, __webpack_require__) {
 
 var disposed = false
-var normalizeComponent = __webpack_require__(2)
+var normalizeComponent = __webpack_require__(1)
 /* script */
 var __vue_script__ = __webpack_require__(177)
 /* template */
@@ -71956,7 +71974,7 @@ function injectStyle (ssrContext) {
   if (disposed) return
   __webpack_require__(180)
 }
-var normalizeComponent = __webpack_require__(2)
+var normalizeComponent = __webpack_require__(1)
 /* script */
 var __vue_script__ = __webpack_require__(183)
 /* template */
@@ -72009,7 +72027,7 @@ var content = __webpack_require__(181);
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add the styles to the DOM
-var update = __webpack_require__(5)("5381807c", content, false, {});
+var update = __webpack_require__(4)("5381807c", content, false, {});
 // Hot Module Replacement
 if(false) {
  // When the styles change, update the <style> tags
@@ -72028,7 +72046,7 @@ if(false) {
 /* 181 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(4)(false);
+exports = module.exports = __webpack_require__(3)(false);
 // imports
 
 
@@ -72764,7 +72782,7 @@ if (false) {
 /***/ (function(module, exports, __webpack_require__) {
 
 var disposed = false
-var normalizeComponent = __webpack_require__(2)
+var normalizeComponent = __webpack_require__(1)
 /* script */
 var __vue_script__ = __webpack_require__(186)
 /* template */
@@ -73638,7 +73656,7 @@ function injectStyle (ssrContext) {
   if (disposed) return
   __webpack_require__(189)
 }
-var normalizeComponent = __webpack_require__(2)
+var normalizeComponent = __webpack_require__(1)
 /* script */
 var __vue_script__ = __webpack_require__(191)
 /* template */
@@ -73691,7 +73709,7 @@ var content = __webpack_require__(190);
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add the styles to the DOM
-var update = __webpack_require__(5)("8707d5d4", content, false, {});
+var update = __webpack_require__(4)("8707d5d4", content, false, {});
 // Hot Module Replacement
 if(false) {
  // When the styles change, update the <style> tags
@@ -73710,7 +73728,7 @@ if(false) {
 /* 190 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(4)(false);
+exports = module.exports = __webpack_require__(3)(false);
 // imports
 
 
@@ -74508,7 +74526,7 @@ if (false) {
 /***/ (function(module, exports, __webpack_require__) {
 
 var disposed = false
-var normalizeComponent = __webpack_require__(2)
+var normalizeComponent = __webpack_require__(1)
 /* script */
 var __vue_script__ = __webpack_require__(194)
 /* template */
@@ -74766,6 +74784,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
       $("#addNewCustomer").modal("show");
       this.form.fill(customer);
     },
+
 
     /*==============END FOR EDITING CUSTOMER==============*/
 
@@ -75548,11 +75567,5544 @@ function injectStyle (ssrContext) {
   if (disposed) return
   __webpack_require__(197)
 }
-var normalizeComponent = __webpack_require__(2)
+var normalizeComponent = __webpack_require__(1)
 /* script */
 var __vue_script__ = __webpack_require__(199)
 /* template */
 var __vue_template__ = __webpack_require__(200)
+/* template functional */
+var __vue_template_functional__ = false
+/* styles */
+var __vue_styles__ = injectStyle
+/* scopeId */
+var __vue_scopeId__ = null
+/* moduleIdentifier (server only) */
+var __vue_module_identifier__ = null
+var Component = normalizeComponent(
+  __vue_script__,
+  __vue_template__,
+  __vue_template_functional__,
+  __vue_styles__,
+  __vue_scopeId__,
+  __vue_module_identifier__
+)
+Component.options.__file = "resources/js/components/TicketInvoice/VendorTicketInvoice.vue"
+
+/* hot reload */
+if (false) {(function () {
+  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), false)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-6e3819e0", Component.options)
+  } else {
+    hotAPI.reload("data-v-6e3819e0", Component.options)
+  }
+  module.hot.dispose(function (data) {
+    disposed = true
+  })
+})()}
+
+module.exports = Component.exports
+
+
+/***/ }),
+/* 197 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(198);
+if(typeof content === 'string') content = [[module.i, content, '']];
+if(content.locals) module.exports = content.locals;
+// add the styles to the DOM
+var update = __webpack_require__(4)("5112f90a", content, false, {});
+// Hot Module Replacement
+if(false) {
+ // When the styles change, update the <style> tags
+ if(!content.locals) {
+   module.hot.accept("!!../../../../node_modules/css-loader/index.js!../../../../node_modules/vue-loader/lib/style-compiler/index.js?{\"vue\":true,\"id\":\"data-v-6e3819e0\",\"scoped\":false,\"hasInlineConfig\":true}!../../../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./VendorTicketInvoice.vue", function() {
+     var newContent = require("!!../../../../node_modules/css-loader/index.js!../../../../node_modules/vue-loader/lib/style-compiler/index.js?{\"vue\":true,\"id\":\"data-v-6e3819e0\",\"scoped\":false,\"hasInlineConfig\":true}!../../../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./VendorTicketInvoice.vue");
+     if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+     update(newContent);
+   });
+ }
+ // When the module is disposed, remove the <style> tags
+ module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
+/* 198 */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(3)(false);
+// imports
+
+
+// module
+exports.push([module.i, "\n.modal-full {\r\n  min-width: 86%;\r\n  margin: auto;\n}\n.modal-full .modal-content {\r\n  min-height: 100vh;\n}\n#borderless {\r\n  background-color: white;\r\n  border: none;\n}\n#fillcolor {\r\n  background-color: #f2f2f2;\n}\n.tfoot {\r\n  border: none;\n}\r\n", ""]);
+
+// exports
+
+
+/***/ }),
+/* 199 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+/* harmony default export */ __webpack_exports__["default"] = ({
+  data: function data() {
+    return {
+      editmode: true,
+      ticketInvoices: {},
+      vendors: null,
+      form: new Form({
+        id: "",
+        vendor_id: "",
+        ticket_invoice_no: "",
+        ticket_invoice_date: "",
+        ticket_invoice_fares_total: 0,
+        ticket_invoice_taxes_grand_total: 0,
+        ticket_invoice_grand_total: 0,
+        ticket_invoice_grand_total_words: "",
+        ticket_invoice_terms: "",
+
+        ticketInvoiceItems: [{
+          id: "",
+          ticket_invoice_id: "",
+          passenger_name: "",
+          ticket_no: "",
+          flight_no: "",
+          departure_date: "",
+          sector: "",
+          tax_SB: "",
+          tax_SRP: "",
+          tax_YQ: "",
+          tax_RG: "",
+          tax_PK: "",
+          tax_YR: "",
+          tax_SF: "",
+          tax_PTT: "",
+          tax_OAS: "",
+          tax_PSF: "",
+          tax_PB: "",
+          tax_OAD: "",
+          fares: 0,
+          total_tax_breakup: 0,
+          sub_total: 0
+        }]
+      })
+    };
+  },
+
+  methods: {
+    getTotalTaxes: function getTotalTaxes(key) {
+      var calTaxTotal = parseInt(this.form.ticketInvoiceItems[key].tax_SB) + parseInt(this.form.ticketInvoiceItems[key].tax_SRP) + parseInt(this.form.ticketInvoiceItems[key].tax_YQ) + parseInt(this.form.ticketInvoiceItems[key].tax_RG) + parseInt(this.form.ticketInvoiceItems[key].tax_PK) + parseInt(this.form.ticketInvoiceItems[key].tax_YR) + parseInt(this.form.ticketInvoiceItems[key].tax_SF) + parseInt(this.form.ticketInvoiceItems[key].tax_PTT) + parseInt(this.form.ticketInvoiceItems[key].tax_OAS) + parseInt(this.form.ticketInvoiceItems[key].tax_PSF) + parseInt(this.form.ticketInvoiceItems[key].tax_PB) + parseInt(this.form.ticketInvoiceItems[key].tax_OAD);
+
+      this.form.ticketInvoiceItems[key].total_tax_breakup = calTaxTotal;
+
+      return calTaxTotal;
+    },
+    getSubTotal: function getSubTotal(key) {
+      var calSubTotal = parseInt(this.form.ticketInvoiceItems[key].total_tax_breakup) + parseInt(this.form.ticketInvoiceItems[key].fares);
+
+      this.form.ticketInvoiceItems[key].sub_total = calSubTotal;
+
+      return calSubTotal;
+    },
+    getFareTotal: function getFareTotal() {
+      var calFareTotal = 0;
+
+      // console.log("1 => ", this.form);
+      // console.log("2 =>", this.form.ticketInvoiceItems);//this puts  undefined why ?
+
+      Object.values(this.form.ticketInvoiceItems).forEach(function (i) {
+        return calFareTotal += parseFloat(i.fares);
+      });
+
+      this.form.ticket_invoice_fares_total = calFareTotal;
+
+      return calFareTotal;
+    },
+    getTaxGTotal: function getTaxGTotal() {
+      var calTaxGTotal = 0;
+
+      this.form.ticketInvoiceItems.forEach(function (i) {
+        return calTaxGTotal += i.total_tax_breakup;
+      });
+
+      this.form.ticket_invoice_taxes_grand_total = calTaxGTotal;
+
+      return calTaxGTotal;
+    },
+    getGrandTotal: function getGrandTotal() {
+      var calGrandTotal = 0;
+
+      calGrandTotal = parseInt(this.form.ticket_invoice_fares_total) + parseInt(this.form.ticket_invoice_taxes_grand_total);
+
+      this.form.ticket_invoice_grand_total = calGrandTotal;
+
+      return calGrandTotal;
+    },
+
+
+    /*=================LOAD TICKET INVOICE CODE=================*/
+    loadTicketInvoices: function loadTicketInvoices() {
+      var _this = this;
+
+      axios.get("api/ticket-invoice").then(function (_ref) {
+        var data = _ref.data;
+        return _this.ticketInvoices = data.data;
+      });
+    },
+
+    /*=================END LOAD TICKET INVOICE CODE=================*/
+
+    /*=================LOAD VENDORS CODE=================*/
+    loadVendors: function loadVendors() {
+      var _this2 = this;
+
+      axios.get("api/vendor").then(function (_ref2) {
+        var data = _ref2.data;
+        return _this2.vendors = data.data;
+      });
+    },
+
+    /*=================END LOAD VENDORS CODE=================*/
+
+    /*=================CREATE TICKET INVOICE CODE=================*/
+    createTicketInvoice: function createTicketInvoice() {
+      var _this3 = this;
+
+      this.$Progress.start();
+      this.form.post("api/ticket-invoice").then(function () {
+        Fire.$emit("RefreshTable");
+        $("#addNewTicketInvoice").modal("hide");
+        toast({
+          type: "success",
+          title: "Invoice Created Successfully"
+        });
+        _this3.$Progress.finish();
+      }).catch(function () {
+        swal("Failed!", "There was something wrong.", "warning");
+        _this3.$Progress.fail();
+      });
+    },
+
+    /*=================END CREATE TICKET INVOICE CODE=================*/
+
+    /*==============EDIT INVOICE CODE==============*/
+    editModel: function editModel(ticketInvoice) {
+      this.editmode = true;
+      this.form.reset();
+      this.form.clear();
+      $("#addNewTicketInvoice").modal("show");
+      // console.log("edit  => ",ticketInvoice)
+      this.form.fill(ticketInvoice);
+
+      this.form.ticketInvoiceItems = ticketInvoice.ticket_invoice_items;
+
+      // console.log("after fill  => ",this.form)
+    },
+
+    /*==============END EDIT INVOICE CODE==============*/
+
+    /*=================ADD ITEMS FIELDS CODE=================*/
+    addItems: function addItems(key) {
+      this.form.ticketInvoiceItems.splice(key + 1, 0, {
+        id: "",
+        ticket_invoice_id: "",
+        passenger_name: "",
+        ticket_no: "",
+        flight_no: "",
+        departure_date: "",
+        sector: "",
+        tax_SB: "",
+        tax_SRP: "",
+        tax_YQ: "",
+        tax_RG: "",
+        tax_PK: "",
+        tax_YR: "",
+        tax_SF: "",
+        tax_PTT: "",
+        tax_OAS: "",
+        tax_PSF: "",
+        tax_PB: "",
+        tax_OAD: "",
+        total_tax_breakup: 0,
+        fares: 0,
+        sub_total: 0
+      });
+    },
+
+    /*=================END ADD ITEMS FIELDS CODE=================*/
+
+    /*=================REMOVE ITEMS FIELDS CODE=================*/
+    removeItems: function removeItems(key) {
+      this.form.ticketInvoiceItems.splice(key, 1);
+    },
+
+    /*=================END REMOVE ITEMS FIELDS CODE=================*/
+
+    /*=================FORMAT MONEY CODE=================*/
+    formatPrice: function formatPrice(value) {
+      var val = (value / 1).toFixed().replace(".", ",");
+      return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); //75.674,00
+    },
+
+
+    /*=================END FORMAT MONEY CODE=================*/
+
+    /*=================OPEN NEW MODEL CODE=================*/
+    newModel: function newModel() {
+      this.editmode = false;
+      this.form.reset();
+      this.form.clear();
+      $("#addNewTicketInvoice").modal("show");
+    }
+  },
+  /*=================OPEN NEW MODEL CODE=================*/
+
+  mounted: function mounted() {
+    var _this4 = this;
+
+    this.loadTicketInvoices();
+    Fire.$on("RefreshTable", function () {
+      _this4.loadTicketInvoices();
+    });
+    this.loadVendors();
+    Fire.$on("RefreshTable", function () {
+      _this4.loadVendors();
+    });
+  }
+});
+
+/***/ }),
+/* 200 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var render = function() {
+  var _vm = this
+  var _h = _vm.$createElement
+  var _c = _vm._self._c || _h
+  return _c("div", { staticClass: "container mt-4" }, [
+    _c("div", { staticClass: "row justify-content-center" }, [
+      _c("div", { staticClass: "col-md-12" }, [
+        _c("div", { staticClass: "card" }, [
+          _c("div", { staticClass: "card-header" }, [
+            _c("h3", { staticClass: "card-title" }, [
+              _vm._v("Vendor Invoice Table")
+            ]),
+            _vm._v(" "),
+            _c("div", { staticClass: "card-tools" }, [
+              _c(
+                "button",
+                {
+                  staticClass: "btn btn-default",
+                  staticStyle: { "background-color": "transparent" },
+                  on: { click: _vm.newModel }
+                },
+                [_c("i", { staticClass: "fas fa-user-plus fa-2x text-green" })]
+              )
+            ])
+          ]),
+          _vm._v(" "),
+          _c("div", { staticClass: "card-body table-responsive p-0" }, [
+            _c("table", { staticClass: "table table-hover" }, [
+              _c(
+                "tbody",
+                [
+                  _vm._m(0),
+                  _vm._v(" "),
+                  _vm._l(_vm.ticketInvoices, function(ticketInvoice) {
+                    return _c("tr", { key: ticketInvoice.id }, [
+                      _c("td", [
+                        _vm._v(_vm._s(ticketInvoice.ticket_invoice_no))
+                      ]),
+                      _vm._v(" "),
+                      _c("td", [
+                        _vm._v(_vm._s(ticketInvoice.vendor.vendor_company_name))
+                      ]),
+                      _vm._v(" "),
+                      _c("td", [
+                        _vm._v(
+                          _vm._s(
+                            _vm._f("myDate")(ticketInvoice.ticket_invoice_date)
+                          )
+                        )
+                      ]),
+                      _vm._v(" "),
+                      _c("td", [
+                        _vm._v(
+                          _vm._s(
+                            _vm.formatPrice(
+                              ticketInvoice.ticket_invoice_grand_total
+                            )
+                          )
+                        )
+                      ]),
+                      _vm._v(" "),
+                      _c("td", [
+                        _c(
+                          "a",
+                          {
+                            attrs: { href: "#" },
+                            on: {
+                              click: function($event) {
+                                _vm.editModel(ticketInvoice)
+                              }
+                            }
+                          },
+                          [
+                            _c("i", {
+                              staticClass: "fas fa-user-edit fa-lg text-orange"
+                            })
+                          ]
+                        ),
+                        _vm._v("\n                     \n                    "),
+                        _vm._m(1, true)
+                      ])
+                    ])
+                  })
+                ],
+                2
+              )
+            ])
+          ])
+        ])
+      ])
+    ]),
+    _vm._v(" "),
+    _c(
+      "div",
+      {
+        staticClass: "modal fade",
+        attrs: {
+          id: "addNewTicketInvoice",
+          tabindex: "-1",
+          role: "dialog",
+          "aria-labelledby": "addNewTicketInvoiceTitle",
+          "aria-hidden": "true",
+          "data-backdrop": "static",
+          "data-keyboard": "false"
+        }
+      },
+      [
+        _c(
+          "div",
+          {
+            staticClass:
+              "modal-dialog modal-dialog-centered modal-full float-sm-right",
+            attrs: { role: "document" }
+          },
+          [
+            _c("div", { staticClass: "modal-content" }, [
+              _c("div", { staticClass: "modal-header" }, [
+                _c(
+                  "h5",
+                  {
+                    directives: [
+                      {
+                        name: "show",
+                        rawName: "v-show",
+                        value: !_vm.editmode,
+                        expression: "!editmode"
+                      }
+                    ],
+                    staticClass: "modal-title",
+                    attrs: { id: "addNewTicketInvoiceTitle" }
+                  },
+                  [_vm._v("Add Vendor Invoice")]
+                ),
+                _vm._v(" "),
+                _c(
+                  "h5",
+                  {
+                    directives: [
+                      {
+                        name: "show",
+                        rawName: "v-show",
+                        value: _vm.editmode,
+                        expression: "editmode"
+                      }
+                    ],
+                    staticClass: "modal-title",
+                    attrs: { id: "updateTicketInvoiceTitle" }
+                  },
+                  [_vm._v("Update Vendor's Invoice")]
+                ),
+                _vm._v(" "),
+                _vm._m(2)
+              ]),
+              _vm._v(" "),
+              _c(
+                "form",
+                {
+                  on: {
+                    submit: function($event) {
+                      $event.preventDefault()
+                      _vm.editmode
+                        ? _vm.updateTicketInvoice()
+                        : _vm.createTicketInvoice()
+                    }
+                  }
+                },
+                [
+                  _c("div", { staticClass: "modal-body" }, [
+                    _c("div", { staticClass: "row" }, [
+                      _c("div", { staticClass: "col-sm-2" }, [
+                        _c(
+                          "div",
+                          { staticClass: "form-group" },
+                          [
+                            _c(
+                              "label",
+                              {
+                                staticClass: "control-label",
+                                attrs: { for: "ticket_invoice_no" }
+                              },
+                              [_vm._v("Invoice No.")]
+                            ),
+                            _vm._v(" "),
+                            _c("input", {
+                              directives: [
+                                {
+                                  name: "model",
+                                  rawName: "v-model",
+                                  value: _vm.form.ticket_invoice_no,
+                                  expression: "form.ticket_invoice_no"
+                                }
+                              ],
+                              staticClass: "form-control",
+                              class: {
+                                "is-invalid": _vm.form.errors.has(
+                                  "ticket_invoice_no"
+                                )
+                              },
+                              attrs: {
+                                type: "text",
+                                name: "ticket_invoice_no"
+                              },
+                              domProps: { value: _vm.form.ticket_invoice_no },
+                              on: {
+                                input: function($event) {
+                                  if ($event.target.composing) {
+                                    return
+                                  }
+                                  _vm.$set(
+                                    _vm.form,
+                                    "ticket_invoice_no",
+                                    $event.target.value
+                                  )
+                                }
+                              }
+                            }),
+                            _vm._v(" "),
+                            _c("has-error", {
+                              attrs: {
+                                form: _vm.form,
+                                field: "ticket_invoice_no"
+                              }
+                            })
+                          ],
+                          1
+                        )
+                      ]),
+                      _vm._v(" "),
+                      _c("div", { staticClass: "col-sm-2" }, [
+                        _c(
+                          "div",
+                          { staticClass: "form-group" },
+                          [
+                            _c("label", { attrs: { for: "vendor" } }, [
+                              _vm._v("Select Vendor")
+                            ]),
+                            _vm._v(" "),
+                            _c(
+                              "select",
+                              {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.form.vendor_id,
+                                    expression: "form.vendor_id"
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                class: {
+                                  "is-invalid": _vm.form.errors.has("vendor_id")
+                                },
+                                attrs: {
+                                  id: "vendor_id",
+                                  name: "vendor_id",
+                                  type: "text"
+                                },
+                                on: {
+                                  change: function($event) {
+                                    var $$selectedVal = Array.prototype.filter
+                                      .call($event.target.options, function(o) {
+                                        return o.selected
+                                      })
+                                      .map(function(o) {
+                                        var val =
+                                          "_value" in o ? o._value : o.value
+                                        return val
+                                      })
+                                    _vm.$set(
+                                      _vm.form,
+                                      "vendor_id",
+                                      $event.target.multiple
+                                        ? $$selectedVal
+                                        : $$selectedVal[0]
+                                    )
+                                  }
+                                }
+                              },
+                              [
+                                _c(
+                                  "option",
+                                  { attrs: { disabled: "", selected: "" } },
+                                  [_vm._v("Please Select Vendor")]
+                                ),
+                                _vm._v(" "),
+                                _vm._l(_vm.vendors, function(vendor) {
+                                  return _c(
+                                    "option",
+                                    {
+                                      key: vendor.id,
+                                      domProps: { value: vendor.id }
+                                    },
+                                    [_vm._v(_vm._s(vendor.vendor_company_name))]
+                                  )
+                                })
+                              ],
+                              2
+                            ),
+                            _vm._v(" "),
+                            _c("has-error", {
+                              attrs: { form: _vm.form, field: "vendor_id" }
+                            })
+                          ],
+                          1
+                        )
+                      ]),
+                      _vm._v(" "),
+                      _c("div", { staticClass: "col-sm-2" }, [
+                        _c(
+                          "div",
+                          { staticClass: "form-group" },
+                          [
+                            _c(
+                              "label",
+                              { attrs: { for: "ticket_invoice_date" } },
+                              [_vm._v("Invoice Date")]
+                            ),
+                            _vm._v(" "),
+                            _c("input", {
+                              directives: [
+                                {
+                                  name: "model",
+                                  rawName: "v-model",
+                                  value: _vm.form.ticket_invoice_date,
+                                  expression: "form.ticket_invoice_date"
+                                }
+                              ],
+                              staticClass: "form-control",
+                              class: {
+                                "is-invalid": _vm.form.errors.has(
+                                  "ticket_invoice_date"
+                                )
+                              },
+                              attrs: {
+                                type: "date",
+                                name: "ticket_invoice_date",
+                                placeholder: ""
+                              },
+                              domProps: { value: _vm.form.ticket_invoice_date },
+                              on: {
+                                input: function($event) {
+                                  if ($event.target.composing) {
+                                    return
+                                  }
+                                  _vm.$set(
+                                    _vm.form,
+                                    "ticket_invoice_date",
+                                    $event.target.value
+                                  )
+                                }
+                              }
+                            }),
+                            _vm._v(" "),
+                            _c("has-error", {
+                              attrs: {
+                                form: _vm.form,
+                                field: "ticket_invoice_date"
+                              }
+                            })
+                          ],
+                          1
+                        )
+                      ])
+                    ]),
+                    _vm._v(" "),
+                    _c("hr"),
+                    _vm._v(" "),
+                    _c("div", { staticClass: "row" }, [
+                      _c(
+                        "table",
+                        {
+                          staticClass:
+                            "table-form table table-bordered table-responsive-md table-striped text-center"
+                        },
+                        [
+                          _c("thead", [
+                            _c("tr", [
+                              _c("th", [_vm._v("Passenger Name")]),
+                              _vm._v(" "),
+                              _c("th", [_vm._v("Ticket No")]),
+                              _vm._v(" "),
+                              _c("th", [_vm._v("Flight No")]),
+                              _vm._v(" "),
+                              _c("th", [_vm._v("Departure Date")]),
+                              _vm._v(" "),
+                              _c("th", [_vm._v("Sector")]),
+                              _vm._v(" "),
+                              _c("th", [_vm._v("Tax BreakUp")]),
+                              _vm._v(" "),
+                              _c("th", [_vm._v("Taxes Total")]),
+                              _vm._v(" "),
+                              _c("th", [_vm._v("Fares")]),
+                              _vm._v(" "),
+                              _c("th", [_vm._v("Total")]),
+                              _vm._v(" "),
+                              _c("th", [
+                                _c(
+                                  "a",
+                                  {
+                                    staticClass: "btn btn-default",
+                                    staticStyle: {
+                                      "background-color": "transparent"
+                                    },
+                                    on: { click: _vm.addItems }
+                                  },
+                                  [
+                                    _c("i", {
+                                      staticClass:
+                                        "fas fa-check-circle text-green"
+                                    })
+                                  ]
+                                )
+                              ])
+                            ])
+                          ]),
+                          _vm._v(" "),
+                          _c(
+                            "tbody",
+                            _vm._l(_vm.form.ticketInvoiceItems, function(
+                              ticketInvoiceItem,
+                              key
+                            ) {
+                              return _c("tr", { key: key }, [
+                                _c(
+                                  "td",
+                                  [
+                                    _c("input", {
+                                      directives: [
+                                        {
+                                          name: "model",
+                                          rawName: "v-model.number",
+                                          value:
+                                            ticketInvoiceItem.passenger_name,
+                                          expression:
+                                            "ticketInvoiceItem.passenger_name",
+                                          modifiers: { number: true }
+                                        }
+                                      ],
+                                      staticClass: "table-control form-control",
+                                      class: {
+                                        "is-invalid": _vm.form.errors.has(
+                                          "passenger_name"
+                                        )
+                                      },
+                                      attrs: {
+                                        size: "40",
+                                        type: "text",
+                                        name: "passenger_name"
+                                      },
+                                      domProps: {
+                                        value: ticketInvoiceItem.passenger_name
+                                      },
+                                      on: {
+                                        input: function($event) {
+                                          if ($event.target.composing) {
+                                            return
+                                          }
+                                          _vm.$set(
+                                            ticketInvoiceItem,
+                                            "passenger_name",
+                                            _vm._n($event.target.value)
+                                          )
+                                        },
+                                        blur: function($event) {
+                                          _vm.$forceUpdate()
+                                        }
+                                      }
+                                    }),
+                                    _vm._v(" "),
+                                    _c("has-error", {
+                                      attrs: {
+                                        form: _vm.form,
+                                        field: "passenger_name"
+                                      }
+                                    })
+                                  ],
+                                  1
+                                ),
+                                _vm._v(" "),
+                                _c(
+                                  "td",
+                                  [
+                                    _c("input", {
+                                      directives: [
+                                        {
+                                          name: "model",
+                                          rawName: "v-model",
+                                          value: ticketInvoiceItem.ticket_no,
+                                          expression:
+                                            "ticketInvoiceItem.ticket_no"
+                                        }
+                                      ],
+                                      staticClass: "table-control form-control",
+                                      class: {
+                                        "is-invalid": _vm.form.errors.has(
+                                          "ticket_no"
+                                        )
+                                      },
+                                      attrs: {
+                                        size: "24",
+                                        type: "text",
+                                        name: "ticket_no"
+                                      },
+                                      domProps: {
+                                        value: ticketInvoiceItem.ticket_no
+                                      },
+                                      on: {
+                                        input: function($event) {
+                                          if ($event.target.composing) {
+                                            return
+                                          }
+                                          _vm.$set(
+                                            ticketInvoiceItem,
+                                            "ticket_no",
+                                            $event.target.value
+                                          )
+                                        }
+                                      }
+                                    }),
+                                    _vm._v(" "),
+                                    _c("has-error", {
+                                      attrs: {
+                                        form: _vm.form,
+                                        field: "ticket_no"
+                                      }
+                                    })
+                                  ],
+                                  1
+                                ),
+                                _vm._v(" "),
+                                _c(
+                                  "td",
+                                  [
+                                    _c("input", {
+                                      directives: [
+                                        {
+                                          name: "model",
+                                          rawName: "v-model",
+                                          value: ticketInvoiceItem.flight_no,
+                                          expression:
+                                            "ticketInvoiceItem.flight_no"
+                                        }
+                                      ],
+                                      staticClass: "table-control form-control",
+                                      class: {
+                                        "is-invalid": _vm.form.errors.has(
+                                          "flight_no"
+                                        )
+                                      },
+                                      attrs: {
+                                        size: "7",
+                                        type: "text",
+                                        name: "flight_no"
+                                      },
+                                      domProps: {
+                                        value: ticketInvoiceItem.flight_no
+                                      },
+                                      on: {
+                                        input: function($event) {
+                                          if ($event.target.composing) {
+                                            return
+                                          }
+                                          _vm.$set(
+                                            ticketInvoiceItem,
+                                            "flight_no",
+                                            $event.target.value
+                                          )
+                                        }
+                                      }
+                                    }),
+                                    _vm._v(" "),
+                                    _c("has-error", {
+                                      attrs: {
+                                        form: _vm.form,
+                                        field: "flight_no"
+                                      }
+                                    })
+                                  ],
+                                  1
+                                ),
+                                _vm._v(" "),
+                                _c(
+                                  "td",
+                                  [
+                                    _c("input", {
+                                      directives: [
+                                        {
+                                          name: "model",
+                                          rawName: "v-model",
+                                          value:
+                                            ticketInvoiceItem.departure_date,
+                                          expression:
+                                            "ticketInvoiceItem.departure_date"
+                                        }
+                                      ],
+                                      staticClass: "table-control form-control",
+                                      class: {
+                                        "is-invalid": _vm.form.errors.has(
+                                          "departure_date"
+                                        )
+                                      },
+                                      attrs: {
+                                        type: "date",
+                                        name: "departure_date"
+                                      },
+                                      domProps: {
+                                        value: ticketInvoiceItem.departure_date
+                                      },
+                                      on: {
+                                        input: function($event) {
+                                          if ($event.target.composing) {
+                                            return
+                                          }
+                                          _vm.$set(
+                                            ticketInvoiceItem,
+                                            "departure_date",
+                                            $event.target.value
+                                          )
+                                        }
+                                      }
+                                    }),
+                                    _vm._v(" "),
+                                    _c("has-error", {
+                                      attrs: {
+                                        form: _vm.form,
+                                        field: "departure_date"
+                                      }
+                                    })
+                                  ],
+                                  1
+                                ),
+                                _vm._v(" "),
+                                _c(
+                                  "td",
+                                  [
+                                    _c("input", {
+                                      directives: [
+                                        {
+                                          name: "model",
+                                          rawName: "v-model",
+                                          value: ticketInvoiceItem.sector,
+                                          expression: "ticketInvoiceItem.sector"
+                                        }
+                                      ],
+                                      staticClass: "table-control form-control",
+                                      class: {
+                                        "is-invalid": _vm.form.errors.has(
+                                          "sector"
+                                        )
+                                      },
+                                      attrs: { type: "text", name: "sector" },
+                                      domProps: {
+                                        value: ticketInvoiceItem.sector
+                                      },
+                                      on: {
+                                        input: function($event) {
+                                          if ($event.target.composing) {
+                                            return
+                                          }
+                                          _vm.$set(
+                                            ticketInvoiceItem,
+                                            "sector",
+                                            $event.target.value
+                                          )
+                                        }
+                                      }
+                                    }),
+                                    _vm._v(" "),
+                                    _c("has-error", {
+                                      attrs: { form: _vm.form, field: "sector" }
+                                    })
+                                  ],
+                                  1
+                                ),
+                                _vm._v(" "),
+                                _c("td", [
+                                  _c("div", { staticClass: "dropdown" }, [
+                                    _c("button", {
+                                      staticClass:
+                                        "btn btn-secondary dropdown-toggle",
+                                      attrs: {
+                                        type: "button",
+                                        id: "dropdownMenuButton",
+                                        "data-toggle": "dropdown",
+                                        "aria-haspopup": "true",
+                                        "aria-expanded": "false"
+                                      }
+                                    }),
+                                    _vm._v(" "),
+                                    _c(
+                                      "div",
+                                      {
+                                        staticClass: "dropdown-menu form-group",
+                                        attrs: {
+                                          "aria-labelledby":
+                                            "dropdownMenuButton"
+                                        }
+                                      },
+                                      [
+                                        _c("input", {
+                                          directives: [
+                                            {
+                                              name: "model",
+                                              rawName: "v-model.number",
+                                              value: ticketInvoiceItem.tax_SB,
+                                              expression:
+                                                "ticketInvoiceItem.tax_SB",
+                                              modifiers: { number: true }
+                                            }
+                                          ],
+                                          staticClass:
+                                            "table-control form-control",
+                                          class: {
+                                            "is-invalid": _vm.form.errors.has(
+                                              "tax_SB"
+                                            )
+                                          },
+                                          attrs: {
+                                            id: "tax_SB",
+                                            type: "number",
+                                            name: "tax_SB",
+                                            placeholder: "SB"
+                                          },
+                                          domProps: {
+                                            value: ticketInvoiceItem.tax_SB
+                                          },
+                                          on: {
+                                            input: function($event) {
+                                              if ($event.target.composing) {
+                                                return
+                                              }
+                                              _vm.$set(
+                                                ticketInvoiceItem,
+                                                "tax_SB",
+                                                _vm._n($event.target.value)
+                                              )
+                                            },
+                                            blur: function($event) {
+                                              _vm.$forceUpdate()
+                                            }
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("has-error", {
+                                          attrs: {
+                                            form: _vm.form,
+                                            field: "tax_SB"
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("input", {
+                                          directives: [
+                                            {
+                                              name: "model",
+                                              rawName: "v-model.number",
+                                              value: ticketInvoiceItem.tax_SRP,
+                                              expression:
+                                                "ticketInvoiceItem.tax_SRP",
+                                              modifiers: { number: true }
+                                            }
+                                          ],
+                                          staticClass:
+                                            "table-control form-control",
+                                          class: {
+                                            "is-invalid": _vm.form.errors.has(
+                                              "tax_SRP"
+                                            )
+                                          },
+                                          attrs: {
+                                            id: "tax_SRP",
+                                            type: "number",
+                                            name: "tax_SRP",
+                                            placeholder: "SRP"
+                                          },
+                                          domProps: {
+                                            value: ticketInvoiceItem.tax_SRP
+                                          },
+                                          on: {
+                                            input: function($event) {
+                                              if ($event.target.composing) {
+                                                return
+                                              }
+                                              _vm.$set(
+                                                ticketInvoiceItem,
+                                                "tax_SRP",
+                                                _vm._n($event.target.value)
+                                              )
+                                            },
+                                            blur: function($event) {
+                                              _vm.$forceUpdate()
+                                            }
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("has-error", {
+                                          attrs: {
+                                            form: _vm.form,
+                                            field: "tax_SRP"
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("input", {
+                                          directives: [
+                                            {
+                                              name: "model",
+                                              rawName: "v-model.number",
+                                              value: ticketInvoiceItem.tax_YQ,
+                                              expression:
+                                                "ticketInvoiceItem.tax_YQ",
+                                              modifiers: { number: true }
+                                            }
+                                          ],
+                                          staticClass:
+                                            "table-control form-control",
+                                          class: {
+                                            "is-invalid": _vm.form.errors.has(
+                                              "tax_YQ"
+                                            )
+                                          },
+                                          attrs: {
+                                            id: "tax_YQ",
+                                            type: "number",
+                                            name: "tax_YQ",
+                                            placeholder: "YQ"
+                                          },
+                                          domProps: {
+                                            value: ticketInvoiceItem.tax_YQ
+                                          },
+                                          on: {
+                                            input: function($event) {
+                                              if ($event.target.composing) {
+                                                return
+                                              }
+                                              _vm.$set(
+                                                ticketInvoiceItem,
+                                                "tax_YQ",
+                                                _vm._n($event.target.value)
+                                              )
+                                            },
+                                            blur: function($event) {
+                                              _vm.$forceUpdate()
+                                            }
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("has-error", {
+                                          attrs: {
+                                            form: _vm.form,
+                                            field: "tax_YQ"
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("input", {
+                                          directives: [
+                                            {
+                                              name: "model",
+                                              rawName: "v-model.number",
+                                              value: ticketInvoiceItem.tax_RG,
+                                              expression:
+                                                "ticketInvoiceItem.tax_RG",
+                                              modifiers: { number: true }
+                                            }
+                                          ],
+                                          staticClass:
+                                            "table-control form-control",
+                                          class: {
+                                            "is-invalid": _vm.form.errors.has(
+                                              "tax_RG"
+                                            )
+                                          },
+                                          attrs: {
+                                            id: "tax_RG",
+                                            type: "number",
+                                            name: "tax_RG",
+                                            placeholder: "RG"
+                                          },
+                                          domProps: {
+                                            value: ticketInvoiceItem.tax_RG
+                                          },
+                                          on: {
+                                            input: function($event) {
+                                              if ($event.target.composing) {
+                                                return
+                                              }
+                                              _vm.$set(
+                                                ticketInvoiceItem,
+                                                "tax_RG",
+                                                _vm._n($event.target.value)
+                                              )
+                                            },
+                                            blur: function($event) {
+                                              _vm.$forceUpdate()
+                                            }
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("has-error", {
+                                          attrs: {
+                                            form: _vm.form,
+                                            field: "tax_RG"
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("input", {
+                                          directives: [
+                                            {
+                                              name: "model",
+                                              rawName: "v-model.number",
+                                              value: ticketInvoiceItem.tax_PK,
+                                              expression:
+                                                "ticketInvoiceItem.tax_PK",
+                                              modifiers: { number: true }
+                                            }
+                                          ],
+                                          staticClass:
+                                            "table-control form-control",
+                                          class: {
+                                            "is-invalid": _vm.form.errors.has(
+                                              "tax_PK"
+                                            )
+                                          },
+                                          attrs: {
+                                            id: "tax_PK",
+                                            type: "number",
+                                            name: "tax_PK",
+                                            placeholder: "PK"
+                                          },
+                                          domProps: {
+                                            value: ticketInvoiceItem.tax_PK
+                                          },
+                                          on: {
+                                            input: function($event) {
+                                              if ($event.target.composing) {
+                                                return
+                                              }
+                                              _vm.$set(
+                                                ticketInvoiceItem,
+                                                "tax_PK",
+                                                _vm._n($event.target.value)
+                                              )
+                                            },
+                                            blur: function($event) {
+                                              _vm.$forceUpdate()
+                                            }
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("has-error", {
+                                          attrs: {
+                                            form: _vm.form,
+                                            field: "tax_PK"
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("input", {
+                                          directives: [
+                                            {
+                                              name: "model",
+                                              rawName: "v-model.number",
+                                              value: ticketInvoiceItem.tax_YR,
+                                              expression:
+                                                "ticketInvoiceItem.tax_YR",
+                                              modifiers: { number: true }
+                                            }
+                                          ],
+                                          staticClass:
+                                            "table-control form-control",
+                                          class: {
+                                            "is-invalid": _vm.form.errors.has(
+                                              "tax_YR"
+                                            )
+                                          },
+                                          attrs: {
+                                            id: "tax_YR",
+                                            type: "number",
+                                            name: "tax_YR",
+                                            placeholder: "YR"
+                                          },
+                                          domProps: {
+                                            value: ticketInvoiceItem.tax_YR
+                                          },
+                                          on: {
+                                            input: function($event) {
+                                              if ($event.target.composing) {
+                                                return
+                                              }
+                                              _vm.$set(
+                                                ticketInvoiceItem,
+                                                "tax_YR",
+                                                _vm._n($event.target.value)
+                                              )
+                                            },
+                                            blur: function($event) {
+                                              _vm.$forceUpdate()
+                                            }
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("has-error", {
+                                          attrs: {
+                                            form: _vm.form,
+                                            field: "tax_YR"
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("input", {
+                                          directives: [
+                                            {
+                                              name: "model",
+                                              rawName: "v-model.number",
+                                              value: ticketInvoiceItem.tax_SF,
+                                              expression:
+                                                "ticketInvoiceItem.tax_SF",
+                                              modifiers: { number: true }
+                                            }
+                                          ],
+                                          staticClass:
+                                            "table-control form-control",
+                                          class: {
+                                            "is-invalid": _vm.form.errors.has(
+                                              "tax_SF"
+                                            )
+                                          },
+                                          attrs: {
+                                            id: "tax_SF",
+                                            type: "number",
+                                            name: "tax_SF",
+                                            placeholder: "SF"
+                                          },
+                                          domProps: {
+                                            value: ticketInvoiceItem.tax_SF
+                                          },
+                                          on: {
+                                            input: function($event) {
+                                              if ($event.target.composing) {
+                                                return
+                                              }
+                                              _vm.$set(
+                                                ticketInvoiceItem,
+                                                "tax_SF",
+                                                _vm._n($event.target.value)
+                                              )
+                                            },
+                                            blur: function($event) {
+                                              _vm.$forceUpdate()
+                                            }
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("has-error", {
+                                          attrs: {
+                                            form: _vm.form,
+                                            field: "tax_SF"
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("input", {
+                                          directives: [
+                                            {
+                                              name: "model",
+                                              rawName: "v-model.number",
+                                              value: ticketInvoiceItem.tax_PTT,
+                                              expression:
+                                                "ticketInvoiceItem.tax_PTT",
+                                              modifiers: { number: true }
+                                            }
+                                          ],
+                                          staticClass:
+                                            "table-control form-control",
+                                          class: {
+                                            "is-invalid": _vm.form.errors.has(
+                                              "tax_PTT"
+                                            )
+                                          },
+                                          attrs: {
+                                            id: "tax_PTT",
+                                            type: "number",
+                                            name: "tax_PTT",
+                                            placeholder: "PTT"
+                                          },
+                                          domProps: {
+                                            value: ticketInvoiceItem.tax_PTT
+                                          },
+                                          on: {
+                                            input: function($event) {
+                                              if ($event.target.composing) {
+                                                return
+                                              }
+                                              _vm.$set(
+                                                ticketInvoiceItem,
+                                                "tax_PTT",
+                                                _vm._n($event.target.value)
+                                              )
+                                            },
+                                            blur: function($event) {
+                                              _vm.$forceUpdate()
+                                            }
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("has-error", {
+                                          attrs: {
+                                            form: _vm.form,
+                                            field: "tax_PTT"
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("input", {
+                                          directives: [
+                                            {
+                                              name: "model",
+                                              rawName: "v-model.number",
+                                              value: ticketInvoiceItem.tax_OAS,
+                                              expression:
+                                                "ticketInvoiceItem.tax_OAS",
+                                              modifiers: { number: true }
+                                            }
+                                          ],
+                                          staticClass:
+                                            "table-control form-control",
+                                          class: {
+                                            "is-invalid": _vm.form.errors.has(
+                                              "tax_OAS"
+                                            )
+                                          },
+                                          attrs: {
+                                            id: "tax_OAS",
+                                            type: "number",
+                                            name: "tax_OAS",
+                                            placeholder: "OAS"
+                                          },
+                                          domProps: {
+                                            value: ticketInvoiceItem.tax_OAS
+                                          },
+                                          on: {
+                                            input: function($event) {
+                                              if ($event.target.composing) {
+                                                return
+                                              }
+                                              _vm.$set(
+                                                ticketInvoiceItem,
+                                                "tax_OAS",
+                                                _vm._n($event.target.value)
+                                              )
+                                            },
+                                            blur: function($event) {
+                                              _vm.$forceUpdate()
+                                            }
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("has-error", {
+                                          attrs: {
+                                            form: _vm.form,
+                                            field: "tax_OAS"
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("input", {
+                                          directives: [
+                                            {
+                                              name: "model",
+                                              rawName: "v-model.number",
+                                              value: ticketInvoiceItem.tax_PSF,
+                                              expression:
+                                                "ticketInvoiceItem.tax_PSF",
+                                              modifiers: { number: true }
+                                            }
+                                          ],
+                                          staticClass:
+                                            "table-control form-control",
+                                          class: {
+                                            "is-invalid": _vm.form.errors.has(
+                                              "tax_PSF"
+                                            )
+                                          },
+                                          attrs: {
+                                            id: "tax_PSF",
+                                            type: "number",
+                                            name: "tax_PSF",
+                                            placeholder: "PSF"
+                                          },
+                                          domProps: {
+                                            value: ticketInvoiceItem.tax_PSF
+                                          },
+                                          on: {
+                                            input: function($event) {
+                                              if ($event.target.composing) {
+                                                return
+                                              }
+                                              _vm.$set(
+                                                ticketInvoiceItem,
+                                                "tax_PSF",
+                                                _vm._n($event.target.value)
+                                              )
+                                            },
+                                            blur: function($event) {
+                                              _vm.$forceUpdate()
+                                            }
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("has-error", {
+                                          attrs: {
+                                            form: _vm.form,
+                                            field: "tax_PSF"
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("input", {
+                                          directives: [
+                                            {
+                                              name: "model",
+                                              rawName: "v-model.number",
+                                              value: ticketInvoiceItem.tax_PB,
+                                              expression:
+                                                "ticketInvoiceItem.tax_PB",
+                                              modifiers: { number: true }
+                                            }
+                                          ],
+                                          staticClass:
+                                            "table-control form-control",
+                                          class: {
+                                            "is-invalid": _vm.form.errors.has(
+                                              "tax_PB"
+                                            )
+                                          },
+                                          attrs: {
+                                            id: "tax_PB",
+                                            type: "number",
+                                            name: "tax_PB",
+                                            placeholder: "PB"
+                                          },
+                                          domProps: {
+                                            value: ticketInvoiceItem.tax_PB
+                                          },
+                                          on: {
+                                            input: function($event) {
+                                              if ($event.target.composing) {
+                                                return
+                                              }
+                                              _vm.$set(
+                                                ticketInvoiceItem,
+                                                "tax_PB",
+                                                _vm._n($event.target.value)
+                                              )
+                                            },
+                                            blur: function($event) {
+                                              _vm.$forceUpdate()
+                                            }
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("has-error", {
+                                          attrs: {
+                                            form: _vm.form,
+                                            field: "tax_PB"
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("input", {
+                                          directives: [
+                                            {
+                                              name: "model",
+                                              rawName: "v-model.number",
+                                              value: ticketInvoiceItem.tax_OAD,
+                                              expression:
+                                                "ticketInvoiceItem.tax_OAD",
+                                              modifiers: { number: true }
+                                            }
+                                          ],
+                                          staticClass:
+                                            "table-control form-control",
+                                          class: {
+                                            "is-invalid": _vm.form.errors.has(
+                                              "tax_OAD"
+                                            )
+                                          },
+                                          attrs: {
+                                            id: "tax_OAD",
+                                            type: "number",
+                                            name: "tax_OAD",
+                                            placeholder: "OAD"
+                                          },
+                                          domProps: {
+                                            value: ticketInvoiceItem.tax_OAD
+                                          },
+                                          on: {
+                                            input: function($event) {
+                                              if ($event.target.composing) {
+                                                return
+                                              }
+                                              _vm.$set(
+                                                ticketInvoiceItem,
+                                                "tax_OAD",
+                                                _vm._n($event.target.value)
+                                              )
+                                            },
+                                            blur: function($event) {
+                                              _vm.$forceUpdate()
+                                            }
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("has-error", {
+                                          attrs: {
+                                            form: _vm.form,
+                                            field: "tax_OAD"
+                                          }
+                                        })
+                                      ],
+                                      1
+                                    )
+                                  ])
+                                ]),
+                                _vm._v(" "),
+                                _c(
+                                  "td",
+                                  [
+                                    _c("input", {
+                                      staticClass: "table-control form-control",
+                                      class: {
+                                        "is-invalid": _vm.form.errors.has(
+                                          "total_tax_breakup"
+                                        )
+                                      },
+                                      attrs: {
+                                        id: "total_tax_breakup",
+                                        readonly: "",
+                                        type: "number",
+                                        size: "10",
+                                        name: "total_tax_breakup"
+                                      },
+                                      domProps: {
+                                        value: _vm.getTotalTaxes(key)
+                                      }
+                                    }),
+                                    _vm._v(" "),
+                                    _c("has-error", {
+                                      attrs: {
+                                        form: _vm.form,
+                                        field: "total_tax_breakup"
+                                      }
+                                    })
+                                  ],
+                                  1
+                                ),
+                                _vm._v(" "),
+                                _c(
+                                  "td",
+                                  [
+                                    _c("input", {
+                                      directives: [
+                                        {
+                                          name: "model",
+                                          rawName: "v-model.number",
+                                          value: ticketInvoiceItem.fares,
+                                          expression: "ticketInvoiceItem.fares",
+                                          modifiers: { number: true }
+                                        }
+                                      ],
+                                      staticClass: "table-control form-control",
+                                      class: {
+                                        "is-invalid": _vm.form.errors.has(
+                                          "fares"
+                                        )
+                                      },
+                                      attrs: {
+                                        type: "number",
+                                        size: "10",
+                                        name: "fares"
+                                      },
+                                      domProps: {
+                                        value: ticketInvoiceItem.fares
+                                      },
+                                      on: {
+                                        input: function($event) {
+                                          if ($event.target.composing) {
+                                            return
+                                          }
+                                          _vm.$set(
+                                            ticketInvoiceItem,
+                                            "fares",
+                                            _vm._n($event.target.value)
+                                          )
+                                        },
+                                        blur: function($event) {
+                                          _vm.$forceUpdate()
+                                        }
+                                      }
+                                    }),
+                                    _vm._v(" "),
+                                    _c("has-error", {
+                                      attrs: { form: _vm.form, field: "fares" }
+                                    })
+                                  ],
+                                  1
+                                ),
+                                _vm._v(" "),
+                                _c(
+                                  "td",
+                                  [
+                                    _c("input", {
+                                      staticClass: "table-control form-control",
+                                      class: {
+                                        "is-invalid": _vm.form.errors.has(
+                                          "sub_total"
+                                        )
+                                      },
+                                      attrs: {
+                                        type: "number",
+                                        readonly: "",
+                                        size: "10",
+                                        name: "sub_total"
+                                      },
+                                      domProps: { value: _vm.getSubTotal(key) }
+                                    }),
+                                    _vm._v(" "),
+                                    _c("has-error", {
+                                      attrs: {
+                                        form: _vm.form,
+                                        field: "sub_total"
+                                      }
+                                    })
+                                  ],
+                                  1
+                                ),
+                                _vm._v(" "),
+                                _c("td", [
+                                  _c(
+                                    "a",
+                                    {
+                                      staticClass:
+                                        "btn btn-default form-control",
+                                      staticStyle: {
+                                        "background-color": "transparent"
+                                      },
+                                      on: {
+                                        click: function($event) {
+                                          _vm.removeItems(key)
+                                        }
+                                      }
+                                    },
+                                    [
+                                      _c("i", {
+                                        staticClass:
+                                          "fas fa-times-circle text-fade-red"
+                                      })
+                                    ]
+                                  )
+                                ])
+                              ])
+                            })
+                          ),
+                          _vm._v(" "),
+                          _c("br"),
+                          _vm._v(" "),
+                          _c("br"),
+                          _vm._v(" "),
+                          _c("tfoot", { staticClass: "tfoot" }, [
+                            _c("tr", [
+                              _vm._m(3),
+                              _vm._v(" "),
+                              _vm._m(4),
+                              _vm._v(" "),
+                              _c("td", { staticClass: "table-amount" }, [
+                                _c("input", {
+                                  staticClass: "form-control",
+                                  class: {
+                                    "is-invalid": _vm.form.errors.has(
+                                      "ticket_invoice_fares_total"
+                                    )
+                                  },
+                                  attrs: {
+                                    type: "text",
+                                    readonly: "",
+                                    name: "ticket_invoice_fares_total"
+                                  },
+                                  domProps: { value: _vm.getFareTotal() }
+                                })
+                              ])
+                            ]),
+                            _vm._v(" "),
+                            _c("tr", [
+                              _vm._m(5),
+                              _vm._v(" "),
+                              _vm._m(6),
+                              _vm._v(" "),
+                              _c("td", { staticClass: "table-amount" }, [
+                                _c("input", {
+                                  staticClass: "form-control",
+                                  class: {
+                                    "is-invalid": _vm.form.errors.has(
+                                      "ticket_invoice_taxes_grand_total"
+                                    )
+                                  },
+                                  attrs: {
+                                    type: "text",
+                                    readonly: "",
+                                    name: "ticket_invoice_taxes_grand_total"
+                                  },
+                                  domProps: { value: _vm.getTaxGTotal() }
+                                })
+                              ])
+                            ]),
+                            _vm._v(" "),
+                            _c("tr", [
+                              _vm._m(7),
+                              _vm._v(" "),
+                              _vm._m(8),
+                              _vm._v(" "),
+                              _c("td", { staticClass: "table-amount" }, [
+                                _c("input", {
+                                  staticClass: "form-control",
+                                  class: {
+                                    "is-invalid": _vm.form.errors.has(
+                                      "ticket_invoice_grand_total"
+                                    )
+                                  },
+                                  attrs: {
+                                    type: "text",
+                                    readonly: "",
+                                    name: "ticket_invoice_grand_total"
+                                  },
+                                  domProps: { value: _vm.getGrandTotal() }
+                                })
+                              ])
+                            ])
+                          ])
+                        ]
+                      )
+                    ])
+                  ]),
+                  _vm._v(" "),
+                  _c(
+                    "div",
+                    {
+                      staticClass: "modal-footer",
+                      staticStyle: {
+                        "justify-content": "center",
+                        display: "flex",
+                        "align-items": "center"
+                      }
+                    },
+                    [
+                      _vm._m(9),
+                      _vm._v(" "),
+                      _c(
+                        "button",
+                        {
+                          directives: [
+                            {
+                              name: "show",
+                              rawName: "v-show",
+                              value: !_vm.editmode,
+                              expression: "!editmode"
+                            }
+                          ],
+                          staticClass: "btn btn-default",
+                          staticStyle: { "background-color": "transparent" },
+                          attrs: { type: "submit" }
+                        },
+                        [
+                          _c("i", {
+                            staticClass: "fas fa-check-circle fa-3x text-green"
+                          })
+                        ]
+                      ),
+                      _vm._v(" "),
+                      _c(
+                        "button",
+                        {
+                          directives: [
+                            {
+                              name: "show",
+                              rawName: "v-show",
+                              value: _vm.editmode,
+                              expression: "editmode"
+                            }
+                          ],
+                          staticClass: "btn btn-default",
+                          staticStyle: { "background-color": "transparent" },
+                          attrs: { type: "submit" }
+                        },
+                        [
+                          _c("i", {
+                            staticClass: "fas fa-check-circle fa-3x text-orange"
+                          })
+                        ]
+                      )
+                    ]
+                  )
+                ]
+              )
+            ])
+          ]
+        )
+      ]
+    )
+  ])
+}
+var staticRenderFns = [
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("tr", [
+      _c("th", [_vm._v("Invoice No.")]),
+      _vm._v(" "),
+      _c("th", [_vm._v("Related Vendor")]),
+      _vm._v(" "),
+      _c("th", [_vm._v("Invoice Date")]),
+      _vm._v(" "),
+      _c("th", [_vm._v("Total Amount")]),
+      _vm._v(" "),
+      _c("th", [_vm._v("Modify")])
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("a", { attrs: { href: "#" } }, [
+      _c("i", { staticClass: "fas fa-user-times fa-lg text-red" })
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c(
+      "button",
+      {
+        staticClass: "close",
+        attrs: {
+          type: "button",
+          "data-dismiss": "modal",
+          "aria-label": "Close"
+        }
+      },
+      [_c("span", { attrs: { "aria-hidden": "true" } }, [_vm._v("×")])]
+    )
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c(
+      "td",
+      { staticClass: "table-empty", attrs: { id: "borderless", colspan: "5" } },
+      [_c("strong")]
+    )
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c(
+      "td",
+      { staticClass: "table-label", attrs: { id: "fillcolor", colspan: "3" } },
+      [_c("strong", [_vm._v("Fares")])]
+    )
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c(
+      "td",
+      { staticClass: "table-empty", attrs: { id: "borderless", colspan: "5" } },
+      [_c("strong")]
+    )
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c(
+      "td",
+      { staticClass: "table-label", attrs: { id: "fillcolor", colspan: "3" } },
+      [_c("strong", [_vm._v("Taxes")])]
+    )
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c(
+      "td",
+      { staticClass: "table-empty", attrs: { id: "borderless", colspan: "5" } },
+      [_c("strong")]
+    )
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c(
+      "td",
+      { staticClass: "table-label", attrs: { id: "fillcolor", colspan: "3" } },
+      [_c("strong", [_vm._v("Total")])]
+    )
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c(
+      "button",
+      {
+        staticClass: "btn btn-default",
+        staticStyle: { "background-color": "transparent" },
+        attrs: { type: "button", "data-dismiss": "modal" }
+      },
+      [_c("i", { staticClass: "fas fa-times-circle fa-3x text-fade-red" })]
+    )
+  }
+]
+render._withStripped = true
+module.exports = { render: render, staticRenderFns: staticRenderFns }
+if (false) {
+  module.hot.accept()
+  if (module.hot.data) {
+    require("vue-hot-reload-api")      .rerender("data-v-6e3819e0", module.exports)
+  }
+}
+
+/***/ }),
+/* 201 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var disposed = false
+function injectStyle (ssrContext) {
+  if (disposed) return
+  __webpack_require__(202)
+}
+var normalizeComponent = __webpack_require__(1)
+/* script */
+var __vue_script__ = __webpack_require__(204)
+/* template */
+var __vue_template__ = __webpack_require__(205)
+/* template functional */
+var __vue_template_functional__ = false
+/* styles */
+var __vue_styles__ = injectStyle
+/* scopeId */
+var __vue_scopeId__ = null
+/* moduleIdentifier (server only) */
+var __vue_module_identifier__ = null
+var Component = normalizeComponent(
+  __vue_script__,
+  __vue_template__,
+  __vue_template_functional__,
+  __vue_styles__,
+  __vue_scopeId__,
+  __vue_module_identifier__
+)
+Component.options.__file = "resources/js/components/TicketInvoice/CustomerTicketInvoice.vue"
+
+/* hot reload */
+if (false) {(function () {
+  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), false)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-e788c90c", Component.options)
+  } else {
+    hotAPI.reload("data-v-e788c90c", Component.options)
+  }
+  module.hot.dispose(function (data) {
+    disposed = true
+  })
+})()}
+
+module.exports = Component.exports
+
+
+/***/ }),
+/* 202 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(203);
+if(typeof content === 'string') content = [[module.i, content, '']];
+if(content.locals) module.exports = content.locals;
+// add the styles to the DOM
+var update = __webpack_require__(4)("2d0f96aa", content, false, {});
+// Hot Module Replacement
+if(false) {
+ // When the styles change, update the <style> tags
+ if(!content.locals) {
+   module.hot.accept("!!../../../../node_modules/css-loader/index.js!../../../../node_modules/vue-loader/lib/style-compiler/index.js?{\"vue\":true,\"id\":\"data-v-e788c90c\",\"scoped\":false,\"hasInlineConfig\":true}!../../../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./CustomerTicketInvoice.vue", function() {
+     var newContent = require("!!../../../../node_modules/css-loader/index.js!../../../../node_modules/vue-loader/lib/style-compiler/index.js?{\"vue\":true,\"id\":\"data-v-e788c90c\",\"scoped\":false,\"hasInlineConfig\":true}!../../../../node_modules/vue-loader/lib/selector.js?type=styles&index=0!./CustomerTicketInvoice.vue");
+     if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+     update(newContent);
+   });
+ }
+ // When the module is disposed, remove the <style> tags
+ module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
+/* 203 */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(3)(false);
+// imports
+
+
+// module
+exports.push([module.i, "\n.modal-full {\r\n  min-width: 86%;\r\n  margin: auto;\n}\n.modal-full .modal-content {\r\n  min-height: 100vh;\n}\n#borderless {\r\n  background-color: white;\r\n  border: none;\n}\n#fillcolor {\r\n  background-color: #f2f2f2;\n}\n.tfoot {\r\n  border: none;\n}\r\n", ""]);
+
+// exports
+
+
+/***/ }),
+/* 204 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+/* harmony default export */ __webpack_exports__["default"] = ({
+  data: function data() {
+    return {
+      editmode: true,
+      selectedTicketInvoiceId: false,
+      viewInvoice: false,
+      ticketInvoices: {},
+      ctInvoices: {},
+      customers: null,
+      form: new Form({
+        id: "",
+        customer_id: "",
+        ct_invoice_no: "",
+        ct_invoice_date: "",
+        ct_invoice_fares_total: 0,
+        ct_invoice_taxes_grand_total: 0,
+        ct_invoice_grand_total: 0,
+        ct_invoice_grand_total_words: "",
+        ct_invoice_terms: "",
+
+        ctInvoiceItems: [{
+          id: "",
+          ct_invoice_id: "",
+          ct_passenger_name: "",
+          ct_ticket_no: "",
+          ct_flight_no: "",
+          ct_departure_date: "",
+          ct_sector: "",
+          ct_tax_SB: "",
+          ct_tax_SRP: "",
+          ct_tax_YQ: "",
+          ct_tax_RG: "",
+          ct_tax_PK: "",
+          ct_tax_YR: "",
+          ct_tax_SF: "",
+          ct_tax_PTT: "",
+          ct_tax_OAS: "",
+          ct_tax_PSF: "",
+          ct_tax_PB: "",
+          ct_tax_OAD: "",
+          ct_fares: 0,
+          ct_total_tax_breakup: 0,
+          ct_sub_total: 0
+        }]
+      })
+    };
+  },
+
+  methods: {
+    loadTicketInvoices: function loadTicketInvoices() {
+      var _this = this;
+
+      axios.get("api/ticket-invoice").then(function (_ref) {
+        var data = _ref.data;
+        return _this.ticketInvoices = data.data;
+      });
+    },
+
+    getRecord: function getRecord(e) {
+      var _this2 = this;
+
+      axios.get("api/ticket-invoice/fetch/" + this.selectedTicketInvoiceId).then(function (_ref2) {
+        var data = _ref2.data;
+
+        console.log(data);
+        _this2.form = new Form(data);
+        // assumes the data keys maps directly to the form properties!!
+        // ensure response data match the keys in the component's data.form property
+      }).catch(function (error) {
+        console.log(error.response);
+      });
+    },
+
+    getCtTotalTaxes: function getCtTotalTaxes(key) {
+      var calTaxTotal = parseInt(this.form.ctInvoiceItems[key].ct_tax_SB) + parseInt(this.form.ctInvoiceItems[key].ct_tax_SRP) + parseInt(this.form.ctInvoiceItems[key].ct_tax_YQ) + parseInt(this.form.ctInvoiceItems[key].ct_tax_RG) + parseInt(this.form.ctInvoiceItems[key].ct_tax_PK) + parseInt(this.form.ctInvoiceItems[key].ct_tax_YR) + parseInt(this.form.ctInvoiceItems[key].ct_tax_SF) + parseInt(this.form.ctInvoiceItems[key].ct_tax_PTT) + parseInt(this.form.ctInvoiceItems[key].ct_tax_OAS) + parseInt(this.form.ctInvoiceItems[key].ct_tax_PSF) + parseInt(this.form.ctInvoiceItems[key].ct_tax_PB) + parseInt(this.form.ctInvoiceItems[key].ct_tax_OAD);
+
+      this.form.ctInvoiceItems[key].ct_total_tax_breakup = calTaxTotal;
+
+      return calTaxTotal;
+    },
+    getCtSubTotal: function getCtSubTotal(key) {
+      var calSubTotal = parseInt(this.form.ctInvoiceItems[key].ct_total_tax_breakup) + parseInt(this.form.ctInvoiceItems[key].ct_fares);
+
+      this.form.ctInvoiceItems[key].ct_sub_total = calSubTotal;
+
+      return calSubTotal;
+    },
+    getCtFareTotal: function getCtFareTotal() {
+      var calFareTotal = 0;
+
+      Object.values(this.form.ctInvoiceItems).forEach(function (i) {
+        return calFareTotal += parseFloat(i.ct_fares);
+      });
+
+      this.form.ct_invoice_fares_total = calFareTotal;
+
+      return calFareTotal;
+    },
+    getCtTaxGTotal: function getCtTaxGTotal() {
+      var calTaxGTotal = 0;
+      Object.values(this.form.ctInvoiceItems).forEach(function (i) {
+        return calTaxGTotal += i.ct_total_tax_breakup;
+      });
+
+      this.form.ct_invoice_taxes_grand_total = calTaxGTotal;
+
+      return calTaxGTotal;
+    },
+    getCtGrandTotal: function getCtGrandTotal() {
+      var calGrandTotal = 0;
+
+      calGrandTotal = parseInt(this.form.ct_invoice_fares_total) + parseInt(this.form.ct_invoice_taxes_grand_total);
+
+      this.form.ct_invoice_grand_total = calGrandTotal;
+
+      return calGrandTotal;
+    },
+
+
+    /*=================LOAD TICKET INVOICE CODE=================*/
+    loadCtInvoices: function loadCtInvoices() {
+      var _this3 = this;
+
+      axios.get("api/ct-invoice").then(function (_ref3) {
+        var data = _ref3.data;
+        return _this3.ctInvoices = data.data;
+      });
+    },
+
+    /*=================END LOAD TICKET INVOICE CODE=================*/
+
+    /*=================LOAD VENDORS CODE=================*/
+    loadCustomers: function loadCustomers() {
+      var _this4 = this;
+
+      axios.get("api/customer").then(function (_ref4) {
+        var data = _ref4.data;
+        return _this4.customers = data.data;
+      });
+    },
+
+    /*=================END LOAD VENDORS CODE=================*/
+
+    /*=================CREATE TICKET INVOICE CODE=================*/
+    createCtInvoice: function createCtInvoice() {
+      var _this5 = this;
+
+      this.$Progress.start();
+      this.form.post("api/ct-invoice").then(function () {
+        Fire.$emit("RefreshTable");
+        $("#addNewCtInvoice").modal("hide");
+        toast({
+          type: "success",
+          title: "Customer Invoice Created Successfully"
+        });
+        _this5.$Progress.finish();
+      }).catch(function () {
+        swal("Failed!", "There was something wrong.", "warning");
+        _this5.$Progress.fail();
+      });
+    },
+
+    /*=================END CREATE TICKET INVOICE CODE=================*/
+
+    /*==============EDIT INVOICE CODE==============*/
+    editModel: function editModel(ctInvoice) {
+      this.editmode = true;
+      this.form.reset();
+      this.form.clear();
+      $("#addNewCtInvoice").modal("show");
+      // console.log("edit  => ",ctInvoice)
+      this.form.fill(ctInvoice);
+
+      this.form.ctInvoiceItems = ctInvoice.ct_invoice_items;
+      // console.log("after fill  => ",this.form)
+    },
+
+    /*==============END EDIT INVOICE CODE==============*/
+
+    /*=================ADD ITEMS FIELDS CODE=================*/
+    addItems: function addItems(key) {
+      this.form.ctInvoiceItems.splice(key + 1, 0, {
+        id: "",
+        ct_invoice_id: "",
+        ct_passenger_name: "",
+        ct_ticket_no: "",
+        ct_flight_no: "",
+        ct_departure_date: "",
+        ct_sector: "",
+        ct_tax_SB: "",
+        ct_tax_SRP: "",
+        ct_tax_YQ: "",
+        ct_tax_RG: "",
+        ct_tax_PK: "",
+        ct_tax_YR: "",
+        ct_tax_SF: "",
+        ct_tax_PTT: "",
+        ct_tax_OAS: "",
+        ct_tax_PSF: "",
+        ct_tax_PB: "",
+        ct_tax_OAD: "",
+        ct_total_tax_breakup: 0,
+        ct_fares: 0,
+        ct_sub_total: 0
+      });
+    },
+
+    /*=================END ADD ITEMS FIELDS CODE=================*/
+
+    /*=================REMOVE ITEMS FIELDS CODE=================*/
+    removeItems: function removeItems(key) {
+      this.form.ctInvoiceItems.splice(key, 1);
+    },
+
+    /*=================END REMOVE ITEMS FIELDS CODE=================*/
+
+    /*=================FORMAT MONEY CODE=================*/
+    formatPrice: function formatPrice(value) {
+      var val = (value / 1).toFixed().replace(".", ",");
+
+      return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); //75.674,00
+    },
+
+    /*=================END FORMAT MONEY CODE=================*/
+
+    /*=================OPEN NEW MODEL CODE=================*/
+    newModel: function newModel() {
+      this.editmode = false;
+      this.form.reset();
+      this.form.clear();
+      $("#addNewCtInvoice").modal("show");
+    }
+  },
+  /*=================OPEN NEW MODEL CODE=================*/
+
+  mounted: function mounted() {
+    var _this6 = this;
+
+    this.loadTicketInvoices();
+    Fire.$on("RefreshTable", function () {
+      _this6.loadTicketInvoices();
+    });
+    this.loadCtInvoices();
+    Fire.$on("RefreshTable", function () {
+      _this6.loadCtInvoices();
+    });
+    this.loadCustomers();
+    Fire.$on("RefreshTable", function () {
+      _this6.loadCustomers();
+    });
+  }
+});
+
+/***/ }),
+/* 205 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var render = function() {
+  var _vm = this
+  var _h = _vm.$createElement
+  var _c = _vm._self._c || _h
+  return _c("div", { staticClass: "container mt-4" }, [
+    _c("div", { staticClass: "row justify-content-center" }, [
+      _c("div", { staticClass: "col-md-12" }, [
+        _c("div", { staticClass: "card" }, [
+          _c("div", { staticClass: "card-header" }, [
+            _c("h3", { staticClass: "card-title" }, [
+              _vm._v("Customer Invoice Table")
+            ]),
+            _vm._v(" "),
+            _c("div", { staticClass: "card-tools" }, [
+              _c(
+                "a",
+                {
+                  staticClass: "btn btn-default",
+                  staticStyle: { "background-color": "transparent" },
+                  on: { click: _vm.newModel }
+                },
+                [_c("i", { staticClass: "fas fa-user-plus fa-2x text-green" })]
+              )
+            ])
+          ]),
+          _vm._v(" "),
+          _c("div", { staticClass: "card-body table-responsive p-0" }, [
+            _c("table", { staticClass: "table table-hover" }, [
+              _c(
+                "tbody",
+                [
+                  _vm._m(0),
+                  _vm._v(" "),
+                  _vm._l(_vm.ctInvoices, function(ctInvoice) {
+                    return _c("tr", { key: ctInvoice.id }, [
+                      _c("td", [_vm._v(_vm._s(ctInvoice.ct_invoice_no))]),
+                      _vm._v(" "),
+                      _c("td", [
+                        _vm._v(_vm._s(ctInvoice.customer.customer_name))
+                      ]),
+                      _vm._v(" "),
+                      _c("td", [
+                        _vm._v(
+                          _vm._s(_vm._f("myDate")(ctInvoice.ct_invoice_date))
+                        )
+                      ]),
+                      _vm._v(" "),
+                      _c("td", [
+                        _vm._v(
+                          _vm._s(
+                            _vm.formatPrice(ctInvoice.ct_invoice_grand_total)
+                          )
+                        )
+                      ]),
+                      _vm._v(" "),
+                      _c(
+                        "td",
+                        [
+                          _c(
+                            "a",
+                            {
+                              attrs: { href: "#" },
+                              on: {
+                                click: function($event) {
+                                  _vm.editModel(ctInvoice)
+                                }
+                              }
+                            },
+                            [
+                              _c("i", {
+                                staticClass:
+                                  "fas fa-user-edit fa-lg text-orange"
+                              })
+                            ]
+                          ),
+                          _vm._v(
+                            "\n                     \n                    "
+                          ),
+                          _vm._m(1, true),
+                          _vm._v(
+                            "\n                     \n                    "
+                          ),
+                          _c(
+                            "router-link",
+                            {
+                              attrs: {
+                                to: {
+                                  name: "ctInvoiceView",
+                                  params: { id: ctInvoice.id }
+                                }
+                              }
+                            },
+                            [
+                              _c("i", {
+                                staticClass: "fas fa-eye fa-lg text-blue"
+                              })
+                            ]
+                          )
+                        ],
+                        1
+                      )
+                    ])
+                  })
+                ],
+                2
+              )
+            ])
+          ])
+        ])
+      ])
+    ]),
+    _vm._v(" "),
+    _c(
+      "div",
+      {
+        staticClass: "modal fade",
+        attrs: {
+          id: "addNewCtInvoice",
+          tabindex: "-1",
+          role: "dialog",
+          "aria-labelledby": "addNewCtInvoiceTitle",
+          "aria-hidden": "true",
+          "data-backdrop": "static",
+          "data-keyboard": "false"
+        }
+      },
+      [
+        _c(
+          "div",
+          {
+            staticClass:
+              "modal-dialog modal-dialog-centered modal-full float-sm-right",
+            attrs: { role: "document" }
+          },
+          [
+            _c("div", { staticClass: "modal-content" }, [
+              _c("div", { staticClass: "modal-header" }, [
+                _c(
+                  "h5",
+                  {
+                    directives: [
+                      {
+                        name: "show",
+                        rawName: "v-show",
+                        value: !_vm.editmode,
+                        expression: "!editmode"
+                      }
+                    ],
+                    staticClass: "modal-title",
+                    attrs: { id: "addNewCtInvoiceTitle" }
+                  },
+                  [_vm._v("Add Customers Invoice")]
+                ),
+                _vm._v(" "),
+                _c(
+                  "h5",
+                  {
+                    directives: [
+                      {
+                        name: "show",
+                        rawName: "v-show",
+                        value: _vm.editmode,
+                        expression: "editmode"
+                      }
+                    ],
+                    staticClass: "modal-title",
+                    attrs: { id: "updateCtInvoiceTitle" }
+                  },
+                  [_vm._v("Update Customer's Invoice")]
+                ),
+                _vm._v(" "),
+                _vm._m(2)
+              ]),
+              _vm._v(" "),
+              _c(
+                "form",
+                {
+                  on: {
+                    submit: function($event) {
+                      $event.preventDefault()
+                      _vm.editmode
+                        ? _vm.updateCtInvoice()
+                        : _vm.createCtInvoice()
+                    }
+                  }
+                },
+                [
+                  _c("div", { staticClass: "modal-body" }, [
+                    _c("div", { staticClass: "row" }, [
+                      _c("div", { staticClass: "col-sm-2" }, [
+                        _c(
+                          "div",
+                          { staticClass: "form-group" },
+                          [
+                            _c(
+                              "label",
+                              { attrs: { for: "ticket_invoice_no" } },
+                              [_vm._v("Select Vendor Invoice")]
+                            ),
+                            _vm._v(" "),
+                            _c(
+                              "select",
+                              {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.selectedTicketInvoiceId,
+                                    expression: "selectedTicketInvoiceId"
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                class: {
+                                  "is-invalid": _vm.form.errors.has(
+                                    "ticket_invoice_no"
+                                  )
+                                },
+                                attrs: {
+                                  id: "ticket_invoice_no",
+                                  name: "ticket_invoice_no",
+                                  type: "text"
+                                },
+                                on: {
+                                  change: [
+                                    function($event) {
+                                      var $$selectedVal = Array.prototype.filter
+                                        .call($event.target.options, function(
+                                          o
+                                        ) {
+                                          return o.selected
+                                        })
+                                        .map(function(o) {
+                                          var val =
+                                            "_value" in o ? o._value : o.value
+                                          return val
+                                        })
+                                      _vm.selectedTicketInvoiceId = $event
+                                        .target.multiple
+                                        ? $$selectedVal
+                                        : $$selectedVal[0]
+                                    },
+                                    _vm.getRecord
+                                  ]
+                                }
+                              },
+                              _vm._l(_vm.ticketInvoices, function(
+                                ticketInvoice
+                              ) {
+                                return _c(
+                                  "option",
+                                  {
+                                    key: ticketInvoice.id,
+                                    domProps: { value: ticketInvoice.id }
+                                  },
+                                  [
+                                    _vm._v(
+                                      _vm._s(ticketInvoice.ticket_invoice_no)
+                                    )
+                                  ]
+                                )
+                              })
+                            ),
+                            _vm._v(" "),
+                            _c("has-error", {
+                              attrs: {
+                                form: _vm.form,
+                                field: "ticket_invoice_no"
+                              }
+                            })
+                          ],
+                          1
+                        )
+                      ]),
+                      _vm._v(" "),
+                      _c("div", { staticClass: "col-sm-2" }, [
+                        _c(
+                          "div",
+                          { staticClass: "form-group" },
+                          [
+                            _c(
+                              "label",
+                              {
+                                staticClass: "control-label",
+                                attrs: { for: "ct_invoice_no" }
+                              },
+                              [_vm._v("Invoice No.")]
+                            ),
+                            _vm._v(" "),
+                            _c("input", {
+                              directives: [
+                                {
+                                  name: "model",
+                                  rawName: "v-model",
+                                  value: _vm.form.ct_invoice_no,
+                                  expression: "form.ct_invoice_no"
+                                }
+                              ],
+                              staticClass: "form-control",
+                              class: {
+                                "is-invalid": _vm.form.errors.has(
+                                  "ct_invoice_no"
+                                )
+                              },
+                              attrs: { type: "text", name: "ct_invoice_no" },
+                              domProps: { value: _vm.form.ct_invoice_no },
+                              on: {
+                                input: function($event) {
+                                  if ($event.target.composing) {
+                                    return
+                                  }
+                                  _vm.$set(
+                                    _vm.form,
+                                    "ct_invoice_no",
+                                    $event.target.value
+                                  )
+                                }
+                              }
+                            }),
+                            _vm._v(" "),
+                            _c("has-error", {
+                              attrs: { form: _vm.form, field: "ct_invoice_no" }
+                            })
+                          ],
+                          1
+                        )
+                      ]),
+                      _vm._v(" "),
+                      _c("div", { staticClass: "col-sm-2" }, [
+                        _c(
+                          "div",
+                          { staticClass: "form-group" },
+                          [
+                            _c("label", { attrs: { for: "customer" } }, [
+                              _vm._v("Select Customer")
+                            ]),
+                            _vm._v(" "),
+                            _c(
+                              "select",
+                              {
+                                directives: [
+                                  {
+                                    name: "model",
+                                    rawName: "v-model",
+                                    value: _vm.form.customer_id,
+                                    expression: "form.customer_id"
+                                  }
+                                ],
+                                staticClass: "form-control",
+                                class: {
+                                  "is-invalid": _vm.form.errors.has(
+                                    "customer_id"
+                                  )
+                                },
+                                attrs: {
+                                  id: "customer_id",
+                                  name: "customer_id",
+                                  type: "text"
+                                },
+                                on: {
+                                  change: function($event) {
+                                    var $$selectedVal = Array.prototype.filter
+                                      .call($event.target.options, function(o) {
+                                        return o.selected
+                                      })
+                                      .map(function(o) {
+                                        var val =
+                                          "_value" in o ? o._value : o.value
+                                        return val
+                                      })
+                                    _vm.$set(
+                                      _vm.form,
+                                      "customer_id",
+                                      $event.target.multiple
+                                        ? $$selectedVal
+                                        : $$selectedVal[0]
+                                    )
+                                  }
+                                }
+                              },
+                              [
+                                _c(
+                                  "option",
+                                  { attrs: { disabled: "", selected: "" } },
+                                  [_vm._v("Please Select Customer")]
+                                ),
+                                _vm._v(" "),
+                                _vm._l(_vm.customers, function(customer) {
+                                  return _c(
+                                    "option",
+                                    {
+                                      key: customer.id,
+                                      domProps: { value: customer.id }
+                                    },
+                                    [_vm._v(_vm._s(customer.customer_name))]
+                                  )
+                                })
+                              ],
+                              2
+                            ),
+                            _vm._v(" "),
+                            _c("has-error", {
+                              attrs: { form: _vm.form, field: "customer_id" }
+                            })
+                          ],
+                          1
+                        )
+                      ]),
+                      _vm._v(" "),
+                      _c("div", { staticClass: "col-sm-2" }, [
+                        _c(
+                          "div",
+                          { staticClass: "form-group" },
+                          [
+                            _c("label", { attrs: { for: "ct_invoice_date" } }, [
+                              _vm._v("Invoice Date")
+                            ]),
+                            _vm._v(" "),
+                            _c("input", {
+                              directives: [
+                                {
+                                  name: "model",
+                                  rawName: "v-model",
+                                  value: _vm.form.ct_invoice_date,
+                                  expression: "form.ct_invoice_date"
+                                }
+                              ],
+                              staticClass: "form-control",
+                              class: {
+                                "is-invalid": _vm.form.errors.has(
+                                  "ct_invoice_date"
+                                )
+                              },
+                              attrs: { type: "date", name: "ct_invoice_date" },
+                              domProps: { value: _vm.form.ct_invoice_date },
+                              on: {
+                                input: function($event) {
+                                  if ($event.target.composing) {
+                                    return
+                                  }
+                                  _vm.$set(
+                                    _vm.form,
+                                    "ct_invoice_date",
+                                    $event.target.value
+                                  )
+                                }
+                              }
+                            }),
+                            _vm._v(" "),
+                            _c("has-error", {
+                              attrs: {
+                                form: _vm.form,
+                                field: "ct_invoice_date"
+                              }
+                            })
+                          ],
+                          1
+                        )
+                      ])
+                    ]),
+                    _vm._v(" "),
+                    _c("hr"),
+                    _vm._v(" "),
+                    _c("div", { staticClass: "row" }, [
+                      _c(
+                        "table",
+                        {
+                          staticClass:
+                            "table-form table table-bordered table-responsive-md table-striped text-center"
+                        },
+                        [
+                          _c("thead", [
+                            _c("tr", [
+                              _c("th", [_vm._v("Passenger Name")]),
+                              _vm._v(" "),
+                              _c("th", [_vm._v("Ticket No")]),
+                              _vm._v(" "),
+                              _c("th", [_vm._v("Flight No")]),
+                              _vm._v(" "),
+                              _c("th", [_vm._v("Departure Date")]),
+                              _vm._v(" "),
+                              _c("th", [_vm._v("Sector")]),
+                              _vm._v(" "),
+                              _c("th", [_vm._v("Tax BreakUp")]),
+                              _vm._v(" "),
+                              _c("th", [_vm._v("Taxes Total")]),
+                              _vm._v(" "),
+                              _c("th", [_vm._v("Fares")]),
+                              _vm._v(" "),
+                              _c("th", [_vm._v("Total")]),
+                              _vm._v(" "),
+                              _c("th", [
+                                _c(
+                                  "a",
+                                  {
+                                    staticClass: "btn btn-default",
+                                    staticStyle: {
+                                      "background-color": "transparent"
+                                    },
+                                    on: { click: _vm.addItems }
+                                  },
+                                  [
+                                    _c("i", {
+                                      staticClass:
+                                        "fas fa-check-circle text-green"
+                                    })
+                                  ]
+                                )
+                              ])
+                            ])
+                          ]),
+                          _vm._v(" "),
+                          _c(
+                            "tbody",
+                            _vm._l(_vm.form.ctInvoiceItems, function(
+                              ctInvoiceItem,
+                              key
+                            ) {
+                              return _c("tr", { key: key }, [
+                                _c(
+                                  "td",
+                                  [
+                                    _c("input", {
+                                      directives: [
+                                        {
+                                          name: "model",
+                                          rawName: "v-model",
+                                          value:
+                                            ctInvoiceItem.ct_passenger_name,
+                                          expression:
+                                            "ctInvoiceItem.ct_passenger_name"
+                                        }
+                                      ],
+                                      staticClass: "table-control form-control",
+                                      class: {
+                                        "is-invalid": _vm.form.errors.has(
+                                          "ct_passenger_name"
+                                        )
+                                      },
+                                      attrs: {
+                                        size: "40",
+                                        type: "text",
+                                        name: "ct_passenger_name"
+                                      },
+                                      domProps: {
+                                        value: ctInvoiceItem.ct_passenger_name
+                                      },
+                                      on: {
+                                        input: function($event) {
+                                          if ($event.target.composing) {
+                                            return
+                                          }
+                                          _vm.$set(
+                                            ctInvoiceItem,
+                                            "ct_passenger_name",
+                                            $event.target.value
+                                          )
+                                        }
+                                      }
+                                    }),
+                                    _vm._v(" "),
+                                    _c("has-error", {
+                                      attrs: {
+                                        form: _vm.form,
+                                        field: "ct_passenger_name"
+                                      }
+                                    })
+                                  ],
+                                  1
+                                ),
+                                _vm._v(" "),
+                                _c(
+                                  "td",
+                                  [
+                                    _c("input", {
+                                      directives: [
+                                        {
+                                          name: "model",
+                                          rawName: "v-model",
+                                          value: ctInvoiceItem.ct_ticket_no,
+                                          expression:
+                                            "ctInvoiceItem.ct_ticket_no"
+                                        }
+                                      ],
+                                      staticClass: "table-control form-control",
+                                      class: {
+                                        "is-invalid": _vm.form.errors.has(
+                                          "ct_ticket_no"
+                                        )
+                                      },
+                                      attrs: {
+                                        size: "24",
+                                        type: "text",
+                                        name: "ct_ticket_no"
+                                      },
+                                      domProps: {
+                                        value: ctInvoiceItem.ct_ticket_no
+                                      },
+                                      on: {
+                                        input: function($event) {
+                                          if ($event.target.composing) {
+                                            return
+                                          }
+                                          _vm.$set(
+                                            ctInvoiceItem,
+                                            "ct_ticket_no",
+                                            $event.target.value
+                                          )
+                                        }
+                                      }
+                                    }),
+                                    _vm._v(" "),
+                                    _c("has-error", {
+                                      attrs: {
+                                        form: _vm.form,
+                                        field: "ct_ticket_no"
+                                      }
+                                    })
+                                  ],
+                                  1
+                                ),
+                                _vm._v(" "),
+                                _c(
+                                  "td",
+                                  [
+                                    _c("input", {
+                                      directives: [
+                                        {
+                                          name: "model",
+                                          rawName: "v-model",
+                                          value: ctInvoiceItem.ct_flight_no,
+                                          expression:
+                                            "ctInvoiceItem.ct_flight_no"
+                                        }
+                                      ],
+                                      staticClass: "table-control form-control",
+                                      class: {
+                                        "is-invalid": _vm.form.errors.has(
+                                          "ct_flight_no"
+                                        )
+                                      },
+                                      attrs: {
+                                        size: "7",
+                                        type: "text",
+                                        name: "ct_flight_no"
+                                      },
+                                      domProps: {
+                                        value: ctInvoiceItem.ct_flight_no
+                                      },
+                                      on: {
+                                        input: function($event) {
+                                          if ($event.target.composing) {
+                                            return
+                                          }
+                                          _vm.$set(
+                                            ctInvoiceItem,
+                                            "ct_flight_no",
+                                            $event.target.value
+                                          )
+                                        }
+                                      }
+                                    }),
+                                    _vm._v(" "),
+                                    _c("has-error", {
+                                      attrs: {
+                                        form: _vm.form,
+                                        field: "ct_flight_no"
+                                      }
+                                    })
+                                  ],
+                                  1
+                                ),
+                                _vm._v(" "),
+                                _c(
+                                  "td",
+                                  [
+                                    _c("input", {
+                                      directives: [
+                                        {
+                                          name: "model",
+                                          rawName: "v-model",
+                                          value:
+                                            ctInvoiceItem.ct_departure_date,
+                                          expression:
+                                            "ctInvoiceItem.ct_departure_date"
+                                        }
+                                      ],
+                                      staticClass: "table-control form-control",
+                                      class: {
+                                        "is-invalid": _vm.form.errors.has(
+                                          "ct_departure_date"
+                                        )
+                                      },
+                                      attrs: {
+                                        type: "date",
+                                        name: "ct_departure_date"
+                                      },
+                                      domProps: {
+                                        value: ctInvoiceItem.ct_departure_date
+                                      },
+                                      on: {
+                                        input: function($event) {
+                                          if ($event.target.composing) {
+                                            return
+                                          }
+                                          _vm.$set(
+                                            ctInvoiceItem,
+                                            "ct_departure_date",
+                                            $event.target.value
+                                          )
+                                        }
+                                      }
+                                    }),
+                                    _vm._v(" "),
+                                    _c("has-error", {
+                                      attrs: {
+                                        form: _vm.form,
+                                        field: "ct_departure_date"
+                                      }
+                                    })
+                                  ],
+                                  1
+                                ),
+                                _vm._v(" "),
+                                _c(
+                                  "td",
+                                  [
+                                    _c("input", {
+                                      directives: [
+                                        {
+                                          name: "model",
+                                          rawName: "v-model",
+                                          value: ctInvoiceItem.ct_sector,
+                                          expression: "ctInvoiceItem.ct_sector"
+                                        }
+                                      ],
+                                      staticClass: "table-control form-control",
+                                      class: {
+                                        "is-invalid": _vm.form.errors.has(
+                                          "ct_sector"
+                                        )
+                                      },
+                                      attrs: {
+                                        type: "text",
+                                        name: "ct_sector"
+                                      },
+                                      domProps: {
+                                        value: ctInvoiceItem.ct_sector
+                                      },
+                                      on: {
+                                        input: function($event) {
+                                          if ($event.target.composing) {
+                                            return
+                                          }
+                                          _vm.$set(
+                                            ctInvoiceItem,
+                                            "ct_sector",
+                                            $event.target.value
+                                          )
+                                        }
+                                      }
+                                    }),
+                                    _vm._v(" "),
+                                    _c("has-error", {
+                                      attrs: {
+                                        form: _vm.form,
+                                        field: "ct_sector"
+                                      }
+                                    })
+                                  ],
+                                  1
+                                ),
+                                _vm._v(" "),
+                                _c("td", [
+                                  _c("div", { staticClass: "dropdown" }, [
+                                    _c("button", {
+                                      staticClass:
+                                        "btn btn-secondary dropdown-toggle",
+                                      attrs: {
+                                        type: "button",
+                                        id: "dropdownMenuButton",
+                                        "data-toggle": "dropdown",
+                                        "aria-haspopup": "true",
+                                        "aria-expanded": "false"
+                                      }
+                                    }),
+                                    _vm._v(" "),
+                                    _c(
+                                      "div",
+                                      {
+                                        staticClass: "dropdown-menu form-group",
+                                        attrs: {
+                                          "aria-labelledby":
+                                            "dropdownMenuButton"
+                                        }
+                                      },
+                                      [
+                                        _c("input", {
+                                          directives: [
+                                            {
+                                              name: "model",
+                                              rawName: "v-model.number",
+                                              value: ctInvoiceItem.ct_tax_SB,
+                                              expression:
+                                                "ctInvoiceItem.ct_tax_SB",
+                                              modifiers: { number: true }
+                                            }
+                                          ],
+                                          staticClass:
+                                            "table-control form-control",
+                                          class: {
+                                            "is-invalid": _vm.form.errors.has(
+                                              "ct_tax_SB"
+                                            )
+                                          },
+                                          attrs: {
+                                            id: "ct_tax_SB",
+                                            type: "number",
+                                            name: "ct_tax_SB",
+                                            placeholder: "SB"
+                                          },
+                                          domProps: {
+                                            value: ctInvoiceItem.ct_tax_SB
+                                          },
+                                          on: {
+                                            input: function($event) {
+                                              if ($event.target.composing) {
+                                                return
+                                              }
+                                              _vm.$set(
+                                                ctInvoiceItem,
+                                                "ct_tax_SB",
+                                                _vm._n($event.target.value)
+                                              )
+                                            },
+                                            blur: function($event) {
+                                              _vm.$forceUpdate()
+                                            }
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("has-error", {
+                                          attrs: {
+                                            form: _vm.form,
+                                            field: "ct_tax_SB"
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("input", {
+                                          directives: [
+                                            {
+                                              name: "model",
+                                              rawName: "v-model.number",
+                                              value: ctInvoiceItem.ct_tax_SRP,
+                                              expression:
+                                                "ctInvoiceItem.ct_tax_SRP",
+                                              modifiers: { number: true }
+                                            }
+                                          ],
+                                          staticClass:
+                                            "table-control form-control",
+                                          class: {
+                                            "is-invalid": _vm.form.errors.has(
+                                              "ct_tax_SRP"
+                                            )
+                                          },
+                                          attrs: {
+                                            id: "ct_tax_SRP",
+                                            type: "number",
+                                            name: "ct_tax_SRP",
+                                            placeholder: "SRP"
+                                          },
+                                          domProps: {
+                                            value: ctInvoiceItem.ct_tax_SRP
+                                          },
+                                          on: {
+                                            input: function($event) {
+                                              if ($event.target.composing) {
+                                                return
+                                              }
+                                              _vm.$set(
+                                                ctInvoiceItem,
+                                                "ct_tax_SRP",
+                                                _vm._n($event.target.value)
+                                              )
+                                            },
+                                            blur: function($event) {
+                                              _vm.$forceUpdate()
+                                            }
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("has-error", {
+                                          attrs: {
+                                            form: _vm.form,
+                                            field: "ct_tax_SRP"
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("input", {
+                                          directives: [
+                                            {
+                                              name: "model",
+                                              rawName: "v-model.number",
+                                              value: ctInvoiceItem.ct_tax_YQ,
+                                              expression:
+                                                "ctInvoiceItem.ct_tax_YQ",
+                                              modifiers: { number: true }
+                                            }
+                                          ],
+                                          staticClass:
+                                            "table-control form-control",
+                                          class: {
+                                            "is-invalid": _vm.form.errors.has(
+                                              "ct_tax_YQ"
+                                            )
+                                          },
+                                          attrs: {
+                                            id: "ct_tax_YQ",
+                                            type: "number",
+                                            name: "ct_tax_YQ",
+                                            placeholder: "YQ"
+                                          },
+                                          domProps: {
+                                            value: ctInvoiceItem.ct_tax_YQ
+                                          },
+                                          on: {
+                                            input: function($event) {
+                                              if ($event.target.composing) {
+                                                return
+                                              }
+                                              _vm.$set(
+                                                ctInvoiceItem,
+                                                "ct_tax_YQ",
+                                                _vm._n($event.target.value)
+                                              )
+                                            },
+                                            blur: function($event) {
+                                              _vm.$forceUpdate()
+                                            }
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("has-error", {
+                                          attrs: {
+                                            form: _vm.form,
+                                            field: "ct_tax_YQ"
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("input", {
+                                          directives: [
+                                            {
+                                              name: "model",
+                                              rawName: "v-model.number",
+                                              value: ctInvoiceItem.ct_tax_RG,
+                                              expression:
+                                                "ctInvoiceItem.ct_tax_RG",
+                                              modifiers: { number: true }
+                                            }
+                                          ],
+                                          staticClass:
+                                            "table-control form-control",
+                                          class: {
+                                            "is-invalid": _vm.form.errors.has(
+                                              "ct_tax_RG"
+                                            )
+                                          },
+                                          attrs: {
+                                            id: "ct_tax_RG",
+                                            type: "number",
+                                            name: "ct_tax_RG",
+                                            placeholder: "RG"
+                                          },
+                                          domProps: {
+                                            value: ctInvoiceItem.ct_tax_RG
+                                          },
+                                          on: {
+                                            input: function($event) {
+                                              if ($event.target.composing) {
+                                                return
+                                              }
+                                              _vm.$set(
+                                                ctInvoiceItem,
+                                                "ct_tax_RG",
+                                                _vm._n($event.target.value)
+                                              )
+                                            },
+                                            blur: function($event) {
+                                              _vm.$forceUpdate()
+                                            }
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("has-error", {
+                                          attrs: {
+                                            form: _vm.form,
+                                            field: "ct_tax_RG"
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("input", {
+                                          directives: [
+                                            {
+                                              name: "model",
+                                              rawName: "v-model.number",
+                                              value: ctInvoiceItem.ct_tax_PK,
+                                              expression:
+                                                "ctInvoiceItem.ct_tax_PK",
+                                              modifiers: { number: true }
+                                            }
+                                          ],
+                                          staticClass:
+                                            "table-control form-control",
+                                          class: {
+                                            "is-invalid": _vm.form.errors.has(
+                                              "ct_tax_PK"
+                                            )
+                                          },
+                                          attrs: {
+                                            id: "ct_tax_PK",
+                                            type: "number",
+                                            name: "ct_tax_PK",
+                                            placeholder: "PK"
+                                          },
+                                          domProps: {
+                                            value: ctInvoiceItem.ct_tax_PK
+                                          },
+                                          on: {
+                                            input: function($event) {
+                                              if ($event.target.composing) {
+                                                return
+                                              }
+                                              _vm.$set(
+                                                ctInvoiceItem,
+                                                "ct_tax_PK",
+                                                _vm._n($event.target.value)
+                                              )
+                                            },
+                                            blur: function($event) {
+                                              _vm.$forceUpdate()
+                                            }
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("has-error", {
+                                          attrs: {
+                                            form: _vm.form,
+                                            field: "ct_tax_PK"
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("input", {
+                                          directives: [
+                                            {
+                                              name: "model",
+                                              rawName: "v-model.number",
+                                              value: ctInvoiceItem.ct_tax_YR,
+                                              expression:
+                                                "ctInvoiceItem.ct_tax_YR",
+                                              modifiers: { number: true }
+                                            }
+                                          ],
+                                          staticClass:
+                                            "table-control form-control",
+                                          class: {
+                                            "is-invalid": _vm.form.errors.has(
+                                              "ct_tax_YR"
+                                            )
+                                          },
+                                          attrs: {
+                                            id: "ct_tax_YR",
+                                            type: "number",
+                                            name: "ct_tax_YR",
+                                            placeholder: "YR"
+                                          },
+                                          domProps: {
+                                            value: ctInvoiceItem.ct_tax_YR
+                                          },
+                                          on: {
+                                            input: function($event) {
+                                              if ($event.target.composing) {
+                                                return
+                                              }
+                                              _vm.$set(
+                                                ctInvoiceItem,
+                                                "ct_tax_YR",
+                                                _vm._n($event.target.value)
+                                              )
+                                            },
+                                            blur: function($event) {
+                                              _vm.$forceUpdate()
+                                            }
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("has-error", {
+                                          attrs: {
+                                            form: _vm.form,
+                                            field: "ct_tax_YR"
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("input", {
+                                          directives: [
+                                            {
+                                              name: "model",
+                                              rawName: "v-model.number",
+                                              value: ctInvoiceItem.ct_tax_SF,
+                                              expression:
+                                                "ctInvoiceItem.ct_tax_SF",
+                                              modifiers: { number: true }
+                                            }
+                                          ],
+                                          staticClass:
+                                            "table-control form-control",
+                                          class: {
+                                            "is-invalid": _vm.form.errors.has(
+                                              "ct_tax_SF"
+                                            )
+                                          },
+                                          attrs: {
+                                            id: "ct_tax_SF",
+                                            type: "number",
+                                            name: "ct_tax_SF",
+                                            placeholder: "SF"
+                                          },
+                                          domProps: {
+                                            value: ctInvoiceItem.ct_tax_SF
+                                          },
+                                          on: {
+                                            input: function($event) {
+                                              if ($event.target.composing) {
+                                                return
+                                              }
+                                              _vm.$set(
+                                                ctInvoiceItem,
+                                                "ct_tax_SF",
+                                                _vm._n($event.target.value)
+                                              )
+                                            },
+                                            blur: function($event) {
+                                              _vm.$forceUpdate()
+                                            }
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("has-error", {
+                                          attrs: {
+                                            form: _vm.form,
+                                            field: "ct_tax_SF"
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("input", {
+                                          directives: [
+                                            {
+                                              name: "model",
+                                              rawName: "v-model.number",
+                                              value: ctInvoiceItem.ct_tax_PTT,
+                                              expression:
+                                                "ctInvoiceItem.ct_tax_PTT",
+                                              modifiers: { number: true }
+                                            }
+                                          ],
+                                          staticClass:
+                                            "table-control form-control",
+                                          class: {
+                                            "is-invalid": _vm.form.errors.has(
+                                              "ct_tax_PTT"
+                                            )
+                                          },
+                                          attrs: {
+                                            id: "ct_tax_PTT",
+                                            type: "number",
+                                            name: "ct_tax_PTT",
+                                            placeholder: "PTT"
+                                          },
+                                          domProps: {
+                                            value: ctInvoiceItem.ct_tax_PTT
+                                          },
+                                          on: {
+                                            input: function($event) {
+                                              if ($event.target.composing) {
+                                                return
+                                              }
+                                              _vm.$set(
+                                                ctInvoiceItem,
+                                                "ct_tax_PTT",
+                                                _vm._n($event.target.value)
+                                              )
+                                            },
+                                            blur: function($event) {
+                                              _vm.$forceUpdate()
+                                            }
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("has-error", {
+                                          attrs: {
+                                            form: _vm.form,
+                                            field: "ct_tax_PTT"
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("input", {
+                                          directives: [
+                                            {
+                                              name: "model",
+                                              rawName: "v-model.number",
+                                              value: ctInvoiceItem.ct_tax_OAS,
+                                              expression:
+                                                "ctInvoiceItem.ct_tax_OAS",
+                                              modifiers: { number: true }
+                                            }
+                                          ],
+                                          staticClass:
+                                            "table-control form-control",
+                                          class: {
+                                            "is-invalid": _vm.form.errors.has(
+                                              "ct_tax_OAS"
+                                            )
+                                          },
+                                          attrs: {
+                                            id: "ct_tax_OAS",
+                                            type: "number",
+                                            name: "ct_tax_OAS",
+                                            placeholder: "OAS"
+                                          },
+                                          domProps: {
+                                            value: ctInvoiceItem.ct_tax_OAS
+                                          },
+                                          on: {
+                                            input: function($event) {
+                                              if ($event.target.composing) {
+                                                return
+                                              }
+                                              _vm.$set(
+                                                ctInvoiceItem,
+                                                "ct_tax_OAS",
+                                                _vm._n($event.target.value)
+                                              )
+                                            },
+                                            blur: function($event) {
+                                              _vm.$forceUpdate()
+                                            }
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("has-error", {
+                                          attrs: {
+                                            form: _vm.form,
+                                            field: "ct_tax_OAS"
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("input", {
+                                          directives: [
+                                            {
+                                              name: "model",
+                                              rawName: "v-model.number",
+                                              value: ctInvoiceItem.ct_tax_PSF,
+                                              expression:
+                                                "ctInvoiceItem.ct_tax_PSF",
+                                              modifiers: { number: true }
+                                            }
+                                          ],
+                                          staticClass:
+                                            "table-control form-control",
+                                          class: {
+                                            "is-invalid": _vm.form.errors.has(
+                                              "ct_tax_PSF"
+                                            )
+                                          },
+                                          attrs: {
+                                            id: "ct_tax_PSF",
+                                            type: "number",
+                                            name: "ct_tax_PSF",
+                                            placeholder: "PSF"
+                                          },
+                                          domProps: {
+                                            value: ctInvoiceItem.ct_tax_PSF
+                                          },
+                                          on: {
+                                            input: function($event) {
+                                              if ($event.target.composing) {
+                                                return
+                                              }
+                                              _vm.$set(
+                                                ctInvoiceItem,
+                                                "ct_tax_PSF",
+                                                _vm._n($event.target.value)
+                                              )
+                                            },
+                                            blur: function($event) {
+                                              _vm.$forceUpdate()
+                                            }
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("has-error", {
+                                          attrs: {
+                                            form: _vm.form,
+                                            field: "ct_tax_PSF"
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("input", {
+                                          directives: [
+                                            {
+                                              name: "model",
+                                              rawName: "v-model.number",
+                                              value: ctInvoiceItem.ct_tax_PB,
+                                              expression:
+                                                "ctInvoiceItem.ct_tax_PB",
+                                              modifiers: { number: true }
+                                            }
+                                          ],
+                                          staticClass:
+                                            "table-control form-control",
+                                          class: {
+                                            "is-invalid": _vm.form.errors.has(
+                                              "ct_tax_PB"
+                                            )
+                                          },
+                                          attrs: {
+                                            id: "ct_tax_PB",
+                                            type: "number",
+                                            name: "ct_tax_PB",
+                                            placeholder: "PB"
+                                          },
+                                          domProps: {
+                                            value: ctInvoiceItem.ct_tax_PB
+                                          },
+                                          on: {
+                                            input: function($event) {
+                                              if ($event.target.composing) {
+                                                return
+                                              }
+                                              _vm.$set(
+                                                ctInvoiceItem,
+                                                "ct_tax_PB",
+                                                _vm._n($event.target.value)
+                                              )
+                                            },
+                                            blur: function($event) {
+                                              _vm.$forceUpdate()
+                                            }
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("has-error", {
+                                          attrs: {
+                                            form: _vm.form,
+                                            field: "ct_tax_PB"
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("input", {
+                                          directives: [
+                                            {
+                                              name: "model",
+                                              rawName: "v-model.number",
+                                              value: ctInvoiceItem.ct_tax_OAD,
+                                              expression:
+                                                "ctInvoiceItem.ct_tax_OAD",
+                                              modifiers: { number: true }
+                                            }
+                                          ],
+                                          staticClass:
+                                            "table-control form-control",
+                                          class: {
+                                            "is-invalid": _vm.form.errors.has(
+                                              "ct_tax_OAD"
+                                            )
+                                          },
+                                          attrs: {
+                                            id: "ct_tax_OAD",
+                                            type: "number",
+                                            name: "ct_tax_OAD",
+                                            placeholder: "OAD"
+                                          },
+                                          domProps: {
+                                            value: ctInvoiceItem.ct_tax_OAD
+                                          },
+                                          on: {
+                                            input: function($event) {
+                                              if ($event.target.composing) {
+                                                return
+                                              }
+                                              _vm.$set(
+                                                ctInvoiceItem,
+                                                "ct_tax_OAD",
+                                                _vm._n($event.target.value)
+                                              )
+                                            },
+                                            blur: function($event) {
+                                              _vm.$forceUpdate()
+                                            }
+                                          }
+                                        }),
+                                        _vm._v(" "),
+                                        _c("has-error", {
+                                          attrs: {
+                                            form: _vm.form,
+                                            field: "ct_tax_OAD"
+                                          }
+                                        })
+                                      ],
+                                      1
+                                    )
+                                  ])
+                                ]),
+                                _vm._v(" "),
+                                _c(
+                                  "td",
+                                  [
+                                    _c("input", {
+                                      staticClass: "table-control form-control",
+                                      class: {
+                                        "is-invalid": _vm.form.errors.has(
+                                          "ct_total_tax_breakup"
+                                        )
+                                      },
+                                      attrs: {
+                                        id: "ct_total_tax_breakup",
+                                        readonly: "",
+                                        type: "number",
+                                        size: "10",
+                                        name: "ct_total_tax_breakup"
+                                      },
+                                      domProps: {
+                                        value: _vm.getCtTotalTaxes(key)
+                                      }
+                                    }),
+                                    _vm._v(" "),
+                                    _c("has-error", {
+                                      attrs: {
+                                        form: _vm.form,
+                                        field: "ct_total_tax_breakup"
+                                      }
+                                    })
+                                  ],
+                                  1
+                                ),
+                                _vm._v(" "),
+                                _c(
+                                  "td",
+                                  [
+                                    _c("input", {
+                                      directives: [
+                                        {
+                                          name: "model",
+                                          rawName: "v-model.number",
+                                          value: ctInvoiceItem.ct_fares,
+                                          expression: "ctInvoiceItem.ct_fares",
+                                          modifiers: { number: true }
+                                        }
+                                      ],
+                                      staticClass: "table-control form-control",
+                                      class: {
+                                        "is-invalid": _vm.form.errors.has(
+                                          "ct_fares"
+                                        )
+                                      },
+                                      attrs: {
+                                        type: "number",
+                                        size: "10",
+                                        name: "ct_fares"
+                                      },
+                                      domProps: {
+                                        value: ctInvoiceItem.ct_fares
+                                      },
+                                      on: {
+                                        input: function($event) {
+                                          if ($event.target.composing) {
+                                            return
+                                          }
+                                          _vm.$set(
+                                            ctInvoiceItem,
+                                            "ct_fares",
+                                            _vm._n($event.target.value)
+                                          )
+                                        },
+                                        blur: function($event) {
+                                          _vm.$forceUpdate()
+                                        }
+                                      }
+                                    }),
+                                    _vm._v(" "),
+                                    _c("has-error", {
+                                      attrs: {
+                                        form: _vm.form,
+                                        field: "ct_fares"
+                                      }
+                                    })
+                                  ],
+                                  1
+                                ),
+                                _vm._v(" "),
+                                _c(
+                                  "td",
+                                  [
+                                    _c("input", {
+                                      staticClass: "table-control form-control",
+                                      class: {
+                                        "is-invalid": _vm.form.errors.has(
+                                          "ct_sub_total"
+                                        )
+                                      },
+                                      attrs: {
+                                        id: "ct_sub_total",
+                                        type: "number",
+                                        readonly: "",
+                                        size: "10",
+                                        name: "ct_sub_total"
+                                      },
+                                      domProps: {
+                                        value: _vm.getCtSubTotal(key)
+                                      }
+                                    }),
+                                    _vm._v(" "),
+                                    _c("has-error", {
+                                      attrs: {
+                                        form: _vm.form,
+                                        field: "ct_sub_total"
+                                      }
+                                    })
+                                  ],
+                                  1
+                                ),
+                                _vm._v(" "),
+                                _c("td", [
+                                  _c(
+                                    "a",
+                                    {
+                                      staticClass:
+                                        "btn btn-default form-control",
+                                      staticStyle: {
+                                        "background-color": "transparent"
+                                      },
+                                      on: {
+                                        click: function($event) {
+                                          _vm.removeItems(key)
+                                        }
+                                      }
+                                    },
+                                    [
+                                      _c("i", {
+                                        staticClass:
+                                          "fas fa-times-circle text-fade-red"
+                                      })
+                                    ]
+                                  )
+                                ])
+                              ])
+                            })
+                          ),
+                          _vm._v(" "),
+                          _c("br"),
+                          _vm._v(" "),
+                          _c("br"),
+                          _vm._v(" "),
+                          _c("tfoot", { staticClass: "tfoot" }, [
+                            _c("tr", [
+                              _vm._m(3),
+                              _vm._v(" "),
+                              _vm._m(4),
+                              _vm._v(" "),
+                              _c("td", { staticClass: "table-amount" }, [
+                                _c("input", {
+                                  staticClass: "form-control",
+                                  class: {
+                                    "is-invalid": _vm.form.errors.has(
+                                      "ct_invoice_fares_total"
+                                    )
+                                  },
+                                  attrs: {
+                                    type: "text",
+                                    readonly: "",
+                                    name: "ct_invoice_fares_total"
+                                  },
+                                  domProps: { value: _vm.getCtFareTotal() }
+                                })
+                              ])
+                            ]),
+                            _vm._v(" "),
+                            _c("tr", [
+                              _vm._m(5),
+                              _vm._v(" "),
+                              _vm._m(6),
+                              _vm._v(" "),
+                              _c("td", { staticClass: "table-amount" }, [
+                                _c("input", {
+                                  staticClass: "form-control",
+                                  class: {
+                                    "is-invalid": _vm.form.errors.has(
+                                      "ct_invoice_taxes_grand_total"
+                                    )
+                                  },
+                                  attrs: {
+                                    type: "text",
+                                    readonly: "",
+                                    name: "ct_invoice_taxes_grand_total"
+                                  },
+                                  domProps: { value: _vm.getCtTaxGTotal() }
+                                })
+                              ])
+                            ]),
+                            _vm._v(" "),
+                            _c("tr", [
+                              _vm._m(7),
+                              _vm._v(" "),
+                              _vm._m(8),
+                              _vm._v(" "),
+                              _c("td", { staticClass: "table-amount" }, [
+                                _c("input", {
+                                  staticClass: "form-control",
+                                  class: {
+                                    "is-invalid": _vm.form.errors.has(
+                                      "ct_invoice_grand_total"
+                                    )
+                                  },
+                                  attrs: {
+                                    type: "text",
+                                    readonly: "",
+                                    name: "ct_invoice_grand_total"
+                                  },
+                                  domProps: { value: _vm.getCtGrandTotal() }
+                                })
+                              ])
+                            ])
+                          ])
+                        ]
+                      )
+                    ])
+                  ]),
+                  _vm._v(" "),
+                  _c(
+                    "div",
+                    {
+                      staticClass: "modal-footer",
+                      staticStyle: {
+                        "justify-content": "center",
+                        display: "flex",
+                        "align-items": "center"
+                      }
+                    },
+                    [
+                      _vm._m(9),
+                      _vm._v(" "),
+                      _c(
+                        "button",
+                        {
+                          directives: [
+                            {
+                              name: "show",
+                              rawName: "v-show",
+                              value: !_vm.editmode,
+                              expression: "!editmode"
+                            }
+                          ],
+                          staticClass: "btn btn-default",
+                          staticStyle: { "background-color": "transparent" },
+                          attrs: { type: "submit" }
+                        },
+                        [
+                          _c("i", {
+                            staticClass: "fas fa-check-circle fa-3x text-green"
+                          })
+                        ]
+                      ),
+                      _vm._v(" "),
+                      _c(
+                        "button",
+                        {
+                          directives: [
+                            {
+                              name: "show",
+                              rawName: "v-show",
+                              value: _vm.editmode,
+                              expression: "editmode"
+                            }
+                          ],
+                          staticClass: "btn btn-default",
+                          staticStyle: { "background-color": "transparent" },
+                          attrs: { type: "submit" }
+                        },
+                        [
+                          _c("i", {
+                            staticClass: "fas fa-check-circle fa-3x text-orange"
+                          })
+                        ]
+                      )
+                    ]
+                  )
+                ]
+              )
+            ])
+          ]
+        )
+      ]
+    )
+  ])
+}
+var staticRenderFns = [
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("tr", [
+      _c("th", [_vm._v("Invoice No.")]),
+      _vm._v(" "),
+      _c("th", [_vm._v("Related Customer")]),
+      _vm._v(" "),
+      _c("th", [_vm._v("Invoice Date")]),
+      _vm._v(" "),
+      _c("th", [_vm._v("Total Amount")]),
+      _vm._v(" "),
+      _c("th", [_vm._v("Modify")])
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("a", { attrs: { href: "#" } }, [
+      _c("i", { staticClass: "fas fa-user-times fa-lg text-red" })
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c(
+      "button",
+      {
+        staticClass: "close",
+        attrs: {
+          type: "button",
+          "data-dismiss": "modal",
+          "aria-label": "Close"
+        }
+      },
+      [_c("span", { attrs: { "aria-hidden": "true" } }, [_vm._v("×")])]
+    )
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c(
+      "td",
+      { staticClass: "table-empty", attrs: { id: "borderless", colspan: "5" } },
+      [_c("strong")]
+    )
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c(
+      "td",
+      { staticClass: "table-label", attrs: { id: "fillcolor", colspan: "3" } },
+      [_c("strong", [_vm._v("Fares")])]
+    )
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c(
+      "td",
+      { staticClass: "table-empty", attrs: { id: "borderless", colspan: "5" } },
+      [_c("strong")]
+    )
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c(
+      "td",
+      { staticClass: "table-label", attrs: { id: "fillcolor", colspan: "3" } },
+      [_c("strong", [_vm._v("Taxes")])]
+    )
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c(
+      "td",
+      { staticClass: "table-empty", attrs: { id: "borderless", colspan: "5" } },
+      [_c("strong")]
+    )
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c(
+      "td",
+      { staticClass: "table-label", attrs: { id: "fillcolor", colspan: "3" } },
+      [_c("strong", [_vm._v("Total")])]
+    )
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c(
+      "button",
+      {
+        staticClass: "btn btn-default",
+        staticStyle: { "background-color": "transparent" },
+        attrs: { type: "button", "data-dismiss": "modal" }
+      },
+      [_c("i", { staticClass: "fas fa-times-circle fa-3x text-fade-red" })]
+    )
+  }
+]
+render._withStripped = true
+module.exports = { render: render, staticRenderFns: staticRenderFns }
+if (false) {
+  module.hot.accept()
+  if (module.hot.data) {
+    require("vue-hot-reload-api")      .rerender("data-v-e788c90c", module.exports)
+  }
+}
+
+/***/ }),
+/* 206 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var disposed = false
+var normalizeComponent = __webpack_require__(1)
+/* script */
+var __vue_script__ = __webpack_require__(207)
+/* template */
+var __vue_template__ = __webpack_require__(208)
+/* template functional */
+var __vue_template_functional__ = false
+/* styles */
+var __vue_styles__ = null
+/* scopeId */
+var __vue_scopeId__ = null
+/* moduleIdentifier (server only) */
+var __vue_module_identifier__ = null
+var Component = normalizeComponent(
+  __vue_script__,
+  __vue_template__,
+  __vue_template_functional__,
+  __vue_styles__,
+  __vue_scopeId__,
+  __vue_module_identifier__
+)
+Component.options.__file = "resources/js/components/TicketInvoice/CtInvoiceView.vue"
+
+/* hot reload */
+if (false) {(function () {
+  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), false)
+  if (!hotAPI.compatible) return
+  module.hot.accept()
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-05f31678", Component.options)
+  } else {
+    hotAPI.reload("data-v-05f31678", Component.options)
+  }
+  module.hot.dispose(function (data) {
+    disposed = true
+  })
+})()}
+
+module.exports = Component.exports
+
+
+/***/ }),
+/* 207 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+/* harmony default export */ __webpack_exports__["default"] = ({
+  data: function data() {
+    return {
+      ctInvoices: {},
+      id: {},
+      customers: null,
+      form: new Form({
+        id: "",
+        customer_id: "",
+        ct_invoice_no: "",
+        ct_invoice_date: "",
+        ct_invoice_fares_total: "",
+        ct_invoice_taxes_grand_total: "",
+        ct_invoice_grand_total: "",
+        ct_invoice_grand_total_words: "",
+        ct_invoice_terms: "",
+
+        ctInvoiceItems: [{
+          id: "",
+          ct_invoice_id: "",
+          ct_passenger_name: "",
+          ct_ticket_no: "",
+          ct_flight_no: "",
+          ct_departure_date: "",
+          ct_sector: "",
+          ct_tax_SB: "",
+          ct_tax_SRP: "",
+          ct_tax_YQ: "",
+          ct_tax_RG: "",
+          ct_tax_PK: "",
+          ct_tax_YR: "",
+          ct_tax_SF: "",
+          ct_tax_PTT: "",
+          ct_tax_OAS: "",
+          ct_tax_PSF: "",
+          ct_tax_PB: "",
+          ct_tax_OAD: "",
+          ct_fares: "",
+          ct_total_tax_breakup: "",
+          ct_sub_total: ""
+        }]
+      })
+    };
+  },
+
+  methods: {
+    loadCustomers: function loadCustomers() {
+      var _this = this;
+
+      axios.get("/api/customer").then(function (_ref) {
+        var data = _ref.data;
+        return _this.customers = data.data;
+      });
+    },
+    loadCtInvoices: function loadCtInvoices() {
+      var _this2 = this;
+
+      axios.get("/api/ct-invoice").then(function (_ref2) {
+        var data = _ref2.data;
+        return _this2.ctInvoices = data.data;
+      });
+    }
+  },
+  created: function created() {
+    var _this3 = this;
+
+    axios.get("/api/ct-invoice/" + this.$route.params.id).then(function (_ref3) {
+      var data = _ref3.data;
+
+      console.log(data);
+      _this3.form = new Form(data);
+    }).catch(function (error) {
+      console.log(error.response);
+    });
+  },
+  mounted: function mounted() {
+    var _this4 = this;
+
+    this.loadCtInvoices();
+    Fire.$on("RefreshTable", function () {
+      _this4.loadCtInvoices();
+    });
+    this.loadCustomers();
+    Fire.$on("RefreshTable", function () {
+      _this4.loadCustomers();
+    });
+  }
+});
+
+/***/ }),
+/* 208 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var render = function() {
+  var _vm = this
+  var _h = _vm.$createElement
+  var _c = _vm._self._c || _h
+  return _c("div", { staticClass: "container" }, [
+    _c("div", { staticClass: "invoice p-3 mb-3" }, [
+      _vm._m(0),
+      _c("br"),
+      _c("br"),
+      _vm._v(" "),
+      _c("div", { staticClass: "row invoice-info" }, [
+        _c("div", { staticClass: "col-sm-4 invoice-col" }, [
+          _c("address", [
+            _c("strong", [_vm._v("Customer Info")]),
+            _c("br"),
+            _vm._v(" "),
+            _c("b", [_vm._v("Name:")]),
+            _vm._v(" "),
+            _c("span", [_vm._v(_vm._s(_vm.form.customer.customer_name))]),
+            _c("br"),
+            _vm._v(" "),
+            _c("b", [_vm._v("Address:")]),
+            _vm._v(" "),
+            _c("span", [
+              _vm._v(_vm._s(_vm.form.customer.customer_office_address))
+            ]),
+            _c("br"),
+            _vm._v(" "),
+            _c("b", [_vm._v("Phone:")]),
+            _vm._v(" "),
+            _c("span", [_vm._v(_vm._s(_vm.form.customer.customer_contact))]),
+            _c("br"),
+            _vm._v(" "),
+            _c("b", [_vm._v("Email:")]),
+            _vm._v(" "),
+            _c("span", [_vm._v(_vm._s(_vm.form.customer.customer_email))])
+          ])
+        ]),
+        _vm._v(" "),
+        _c("div", { staticClass: "col-sm-4 invoice-col" }),
+        _vm._v(" "),
+        _c("div", { staticClass: "col-sm-4 invoice-col" }, [
+          _c("b", [_vm._v("Invoice No:")]),
+          _vm._v(" "),
+          _c("span", [_vm._v(_vm._s(_vm.form.ct_invoice_no))]),
+          _c("br"),
+          _vm._v(" "),
+          _c("b", [_vm._v("Invoice Date:")]),
+          _vm._v(" "),
+          _c("span", [
+            _vm._v(_vm._s(_vm._f("myDate")(_vm.form.ct_invoice_date)))
+          ]),
+          _c("br")
+        ])
+      ]),
+      _c("br"),
+      _c("br"),
+      _vm._v(" "),
+      _vm._m(1),
+      _c("br"),
+      _c("br"),
+      _vm._v(" "),
+      _c("hr"),
+      _vm._v(" "),
+      _c("div", { staticClass: "row" }, [
+        _c("div", { staticClass: "col-8" }, [
+          _c("p", { staticClass: "lead" }, [_vm._v("Taxes Break Up")]),
+          _vm._v(" "),
+          _c(
+            "small",
+            {
+              staticClass: "text-muted well well-sm no-shadow",
+              staticStyle: { "margin-top": "10px" }
+            },
+            [
+              _c("strong", [_vm._v("Tax SB:")]),
+              _c("span", [_vm._v(_vm._s(_vm.form.ct_invoice_items.ct_tax_SB))]),
+              _vm._v(" "),
+              _c("strong", [_vm._v("Tax SRP:")]),
+              _c("span", [_vm._v(" 100 ")]),
+              _vm._v(" "),
+              _c("strong", [_vm._v("Tax YQ:")]),
+              _vm._v(" "),
+              _c("span", [_vm._v(" 100 ")]),
+              _vm._v(" "),
+              _c("strong", [_vm._v("Tax RG:")]),
+              _c("span", [_vm._v(" 100 ")]),
+              _vm._v(" "),
+              _c("strong", [_vm._v("Tax PK:")]),
+              _c("span", [_vm._v(" 100 ")]),
+              _vm._v(" "),
+              _c("strong", [_vm._v("Tax YR:")]),
+              _c("span", [_vm._v(" 100 ")]),
+              _c("br"),
+              _vm._v(" "),
+              _c("strong", [_vm._v("Tax SF:")]),
+              _vm._v(" "),
+              _c("span", [_vm._v(" 100 ")]),
+              _vm._v(" "),
+              _c("strong", [_vm._v("Tax PTT:")]),
+              _c("span", [_vm._v(" 100 ")]),
+              _vm._v(" "),
+              _c("strong", [_vm._v("Tax OAS:")]),
+              _c("span", [_vm._v(" 100 ")]),
+              _vm._v(" "),
+              _c("strong", [_vm._v("Tax PSF:")]),
+              _c("span", [_vm._v(" 100 ")]),
+              _vm._v(" "),
+              _c("strong", [_vm._v("Tax PB:")]),
+              _vm._v(" "),
+              _c("span", [_vm._v(" 100 ")]),
+              _vm._v(" "),
+              _c("strong", [_vm._v("Tax OAD:")]),
+              _c("span", [_vm._v(" 100 ")])
+            ]
+          ),
+          _vm._v(" "),
+          _vm._m(2)
+        ]),
+        _vm._v(" "),
+        _vm._m(3)
+      ]),
+      _vm._v(" "),
+      _vm._m(4)
+    ])
+  ])
+}
+var staticRenderFns = [
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "row" }, [
+      _c("div", { staticClass: "col-3" }, [
+        _c("span", { staticClass: "brand-text font-weight-light" }, [
+          _c("img", { attrs: { src: "/img/globe.png", alt: "Invoice Logo" } })
+        ]),
+        _c("br"),
+        _vm._v(" "),
+        _c("small", [
+          _vm._v("Govt. License No. 1579"),
+          _c("br"),
+          _vm._v("NTN & STN 2541235-8 ")
+        ])
+      ]),
+      _vm._v(" "),
+      _c(
+        "div",
+        { staticClass: "col-6", staticStyle: { "text-align": "center" } },
+        [
+          _c("span", { staticClass: "brand-text font-weight-light" }, [
+            _c("img", { attrs: { src: "/img/name.png", alt: "Invoice Logo" } })
+          ]),
+          _vm._v(" "),
+          _c("p", [
+            _vm._v("102-105, Muhammad House, I.I Chundigar Road, Karachi. "),
+            _c("br"),
+            _vm._v(
+              "Phone: 0213-4567895, 0213-5478965, 0214-5987456 Fax: 0213-5478965 "
+            ),
+            _c("br"),
+            _vm._v("Email: alitravel@alitravel.com")
+          ])
+        ]
+      ),
+      _vm._v(" "),
+      _c("div", { staticClass: "col-3" })
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "row" }, [
+      _c("div", { staticClass: "col-12 table-responsive" }, [
+        _c("table", { staticClass: "table table-striped" }, [
+          _c("thead", [
+            _c("tr", [
+              _c("th", [_vm._v("Passenger Name")]),
+              _vm._v(" "),
+              _c("th", [_vm._v("Ticket No")]),
+              _vm._v(" "),
+              _c("th", [_vm._v("Flight No")]),
+              _vm._v(" "),
+              _c("th", [_vm._v("Departure Date")]),
+              _vm._v(" "),
+              _c("th", [_vm._v("Sector")]),
+              _vm._v(" "),
+              _c("th", [_vm._v("Taxes")]),
+              _vm._v(" "),
+              _c("th", [_vm._v("Fare")]),
+              _vm._v(" "),
+              _c("th", [_vm._v("Subtotal")])
+            ])
+          ]),
+          _vm._v(" "),
+          _c("tbody", [
+            _c("tr", [
+              _c("td", [_vm._v("Saif Zakir")]),
+              _vm._v(" "),
+              _c("td", [_vm._v("835-7368-195-985")]),
+              _vm._v(" "),
+              _c("td", [_vm._v("TK 506")]),
+              _vm._v(" "),
+              _c("td", [_vm._v("15-Dec-2018")]),
+              _vm._v(" "),
+              _c("td", [_vm._v("KHI-LHR-ISM")]),
+              _vm._v(" "),
+              _c("td", [_vm._v("Rs.2,000")]),
+              _vm._v(" "),
+              _c("td", [_vm._v("Rs.1,000")]),
+              _vm._v(" "),
+              _c("td", [_vm._v("Rs.3,000")])
+            ]),
+            _vm._v(" "),
+            _c("tr", [
+              _c("td", [_vm._v("Daniyal Ali")]),
+              _vm._v(" "),
+              _c("td", [_vm._v("835-7368-195-985")]),
+              _vm._v(" "),
+              _c("td", [_vm._v("TK 506")]),
+              _vm._v(" "),
+              _c("td", [_vm._v("15-Dec-2018")]),
+              _vm._v(" "),
+              _c("td", [_vm._v("KHI-LHR-ISM")]),
+              _vm._v(" "),
+              _c("td", [_vm._v("Rs.2,000")]),
+              _vm._v(" "),
+              _c("td", [_vm._v("Rs.1,000")]),
+              _vm._v(" "),
+              _c("td", [_vm._v("Rs.3,000")])
+            ]),
+            _vm._v(" "),
+            _c("tr", [
+              _c("td", [_vm._v("Azam Khan")]),
+              _vm._v(" "),
+              _c("td", [_vm._v("835-7368-195-985")]),
+              _vm._v(" "),
+              _c("td", [_vm._v("TK 506")]),
+              _vm._v(" "),
+              _c("td", [_vm._v("15-Dec-2018")]),
+              _vm._v(" "),
+              _c("td", [_vm._v("KHI-LHR-ISM")]),
+              _vm._v(" "),
+              _c("td", [_vm._v("Rs.2,000")]),
+              _vm._v(" "),
+              _c("td", [_vm._v("Rs.1,000")]),
+              _vm._v(" "),
+              _c("td", [_vm._v("Rs.3,000")])
+            ]),
+            _vm._v(" "),
+            _c("tr", [
+              _c("td", [_vm._v("Ali Raza")]),
+              _vm._v(" "),
+              _c("td", [_vm._v("835-7368-195-985")]),
+              _vm._v(" "),
+              _c("td", [_vm._v("TK 506")]),
+              _vm._v(" "),
+              _c("td", [_vm._v("15-Dec-2018")]),
+              _vm._v(" "),
+              _c("td", [_vm._v("KHI-LHR-ISM")]),
+              _vm._v(" "),
+              _c("td", [_vm._v("Rs.2,000")]),
+              _vm._v(" "),
+              _c("td", [_vm._v("Rs.1,000")]),
+              _vm._v(" "),
+              _c("td", [_vm._v("Rs.3,000")])
+            ])
+          ])
+        ])
+      ])
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("p", { staticClass: "lead" }, [
+      _c("small", { staticClass: "text-muted well well-sm no-shadow" }, [
+        _c("strong", [_vm._v("Amount in words:")]),
+        _vm._v(" "),
+        _c("span", [_vm._v("Two Thousand Only")])
+      ])
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "col-4 float-right" }, [
+      _c("div", { staticClass: "table-responsive" }, [
+        _c("table", { staticClass: "table" }, [
+          _c("tbody", [
+            _c("tr", [
+              _c("th", { staticStyle: { width: "50%" } }, [
+                _vm._v("Total Taxes")
+              ]),
+              _vm._v(" "),
+              _c("td", [_vm._v("$250.30")])
+            ]),
+            _vm._v(" "),
+            _c("tr", [
+              _c("th", [_vm._v("Total Fares")]),
+              _vm._v(" "),
+              _c("td", [_vm._v("$10.34")])
+            ]),
+            _vm._v(" "),
+            _c("tr", [
+              _c("th", [_vm._v("Grand Total")]),
+              _vm._v(" "),
+              _c("td", [_vm._v("$5.80")])
+            ])
+          ])
+        ])
+      ])
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "row no-print" }, [
+      _c("div", { staticClass: "col-12" }, [
+        _c("a", { staticClass: "btn btn-default", attrs: { href: "#" } }, [
+          _c("i", { staticClass: "fa fa-print" }),
+          _vm._v(" Print")
+        ]),
+        _vm._v(" "),
+        _c(
+          "button",
+          {
+            staticClass: "btn btn-success float-right",
+            attrs: { type: "button" }
+          },
+          [
+            _c("i", { staticClass: "fa fa-credit-card" }),
+            _vm._v(" Submit\n                    Payment\n                  ")
+          ]
+        ),
+        _vm._v(" "),
+        _c(
+          "button",
+          {
+            staticClass: "btn btn-primary float-right",
+            staticStyle: { "margin-right": "5px" },
+            attrs: { type: "button" }
+          },
+          [
+            _c("i", { staticClass: "fa fa-download" }),
+            _vm._v(" Generate PDF\n                  ")
+          ]
+        )
+      ])
+    ])
+  }
+]
+render._withStripped = true
+module.exports = { render: render, staticRenderFns: staticRenderFns }
+if (false) {
+  module.hot.accept()
+  if (module.hot.data) {
+    require("vue-hot-reload-api")      .rerender("data-v-05f31678", module.exports)
+  }
+}
+
+/***/ }),
+/* 209 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var disposed = false
+function injectStyle (ssrContext) {
+  if (disposed) return
+  __webpack_require__(210)
+}
+var normalizeComponent = __webpack_require__(1)
+/* script */
+var __vue_script__ = __webpack_require__(212)
+/* template */
+var __vue_template__ = __webpack_require__(213)
 /* template functional */
 var __vue_template_functional__ = false
 /* styles */
@@ -75591,17 +81143,17 @@ module.exports = Component.exports
 
 
 /***/ }),
-/* 197 */
+/* 210 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(198);
+var content = __webpack_require__(211);
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add the styles to the DOM
-var update = __webpack_require__(5)("2c474aa2", content, false, {});
+var update = __webpack_require__(4)("2c474aa2", content, false, {});
 // Hot Module Replacement
 if(false) {
  // When the styles change, update the <style> tags
@@ -75617,10 +81169,10 @@ if(false) {
 }
 
 /***/ }),
-/* 198 */
+/* 211 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(4)(false);
+exports = module.exports = __webpack_require__(3)(false);
 // imports
 
 
@@ -75631,7 +81183,7 @@ exports.push([module.i, "\n.action-link[data-v-1552a5b6] {\n    cursor: pointer;
 
 
 /***/ }),
-/* 199 */
+/* 212 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -75995,7 +81547,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 });
 
 /***/ }),
-/* 200 */
+/* 213 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var render = function() {
@@ -76556,19 +82108,19 @@ if (false) {
 }
 
 /***/ }),
-/* 201 */
+/* 214 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var disposed = false
 function injectStyle (ssrContext) {
   if (disposed) return
-  __webpack_require__(202)
+  __webpack_require__(215)
 }
-var normalizeComponent = __webpack_require__(2)
+var normalizeComponent = __webpack_require__(1)
 /* script */
-var __vue_script__ = __webpack_require__(204)
+var __vue_script__ = __webpack_require__(217)
 /* template */
-var __vue_template__ = __webpack_require__(205)
+var __vue_template__ = __webpack_require__(218)
 /* template functional */
 var __vue_template_functional__ = false
 /* styles */
@@ -76607,17 +82159,17 @@ module.exports = Component.exports
 
 
 /***/ }),
-/* 202 */
+/* 215 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(203);
+var content = __webpack_require__(216);
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add the styles to the DOM
-var update = __webpack_require__(5)("415fee92", content, false, {});
+var update = __webpack_require__(4)("415fee92", content, false, {});
 // Hot Module Replacement
 if(false) {
  // When the styles change, update the <style> tags
@@ -76633,10 +82185,10 @@ if(false) {
 }
 
 /***/ }),
-/* 203 */
+/* 216 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(4)(false);
+exports = module.exports = __webpack_require__(3)(false);
 // imports
 
 
@@ -76647,7 +82199,7 @@ exports.push([module.i, "\n.action-link[data-v-397d14ca] {\n    cursor: pointer;
 
 
 /***/ }),
-/* 204 */
+/* 217 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -76767,7 +82319,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 });
 
 /***/ }),
-/* 205 */
+/* 218 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var render = function() {
@@ -76876,19 +82428,19 @@ if (false) {
 }
 
 /***/ }),
-/* 206 */
+/* 219 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var disposed = false
 function injectStyle (ssrContext) {
   if (disposed) return
-  __webpack_require__(207)
+  __webpack_require__(220)
 }
-var normalizeComponent = __webpack_require__(2)
+var normalizeComponent = __webpack_require__(1)
 /* script */
-var __vue_script__ = __webpack_require__(209)
+var __vue_script__ = __webpack_require__(222)
 /* template */
-var __vue_template__ = __webpack_require__(210)
+var __vue_template__ = __webpack_require__(223)
 /* template functional */
 var __vue_template_functional__ = false
 /* styles */
@@ -76927,17 +82479,17 @@ module.exports = Component.exports
 
 
 /***/ }),
-/* 207 */
+/* 220 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(208);
+var content = __webpack_require__(221);
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add the styles to the DOM
-var update = __webpack_require__(5)("cf94f79a", content, false, {});
+var update = __webpack_require__(4)("cf94f79a", content, false, {});
 // Hot Module Replacement
 if(false) {
  // When the styles change, update the <style> tags
@@ -76953,10 +82505,10 @@ if(false) {
 }
 
 /***/ }),
-/* 208 */
+/* 221 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(4)(false);
+exports = module.exports = __webpack_require__(3)(false);
 // imports
 
 
@@ -76967,7 +82519,7 @@ exports.push([module.i, "\n.action-link[data-v-49962cc0] {\n    cursor: pointer;
 
 
 /***/ }),
-/* 209 */
+/* 222 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -77289,7 +82841,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 });
 
 /***/ }),
-/* 210 */
+/* 223 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var render = function() {
@@ -77667,15 +83219,15 @@ if (false) {
 }
 
 /***/ }),
-/* 211 */
+/* 224 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var disposed = false
-var normalizeComponent = __webpack_require__(2)
+var normalizeComponent = __webpack_require__(1)
 /* script */
-var __vue_script__ = __webpack_require__(212)
+var __vue_script__ = __webpack_require__(225)
 /* template */
-var __vue_template__ = __webpack_require__(213)
+var __vue_template__ = __webpack_require__(226)
 /* template functional */
 var __vue_template_functional__ = false
 /* styles */
@@ -77714,7 +83266,7 @@ module.exports = Component.exports
 
 
 /***/ }),
-/* 212 */
+/* 225 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -77735,7 +83287,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 });
 
 /***/ }),
-/* 213 */
+/* 226 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var render = function() {
@@ -78449,15 +84001,15 @@ if (false) {
 }
 
 /***/ }),
-/* 214 */
+/* 227 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var disposed = false
-var normalizeComponent = __webpack_require__(2)
+var normalizeComponent = __webpack_require__(1)
 /* script */
-var __vue_script__ = __webpack_require__(215)
+var __vue_script__ = __webpack_require__(228)
 /* template */
-var __vue_template__ = __webpack_require__(216)
+var __vue_template__ = __webpack_require__(229)
 /* template functional */
 var __vue_template_functional__ = false
 /* styles */
@@ -78496,7 +84048,7 @@ module.exports = Component.exports
 
 
 /***/ }),
-/* 215 */
+/* 228 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -78519,7 +84071,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 });
 
 /***/ }),
-/* 216 */
+/* 229 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var render = function() {
@@ -79355,15 +84907,15 @@ if (false) {
 }
 
 /***/ }),
-/* 217 */
+/* 230 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var disposed = false
-var normalizeComponent = __webpack_require__(2)
+var normalizeComponent = __webpack_require__(1)
 /* script */
-var __vue_script__ = __webpack_require__(218)
+var __vue_script__ = __webpack_require__(231)
 /* template */
-var __vue_template__ = __webpack_require__(219)
+var __vue_template__ = __webpack_require__(232)
 /* template functional */
 var __vue_template_functional__ = false
 /* styles */
@@ -79402,7 +84954,7 @@ module.exports = Component.exports
 
 
 /***/ }),
-/* 218 */
+/* 231 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -79431,7 +84983,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 });
 
 /***/ }),
-/* 219 */
+/* 232 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var render = function() {
@@ -79474,7 +85026,7 @@ if (false) {
 }
 
 /***/ }),
-/* 220 */
+/* 233 */
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin

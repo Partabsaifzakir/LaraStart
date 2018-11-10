@@ -197,15 +197,40 @@ scratch. This page gets rid of all links and provides the needed markup only.
             <ul class="nav nav-treeview">
               <li class="nav-item">
                 <router-link to="/vendors" class="nav-link">
-                  <i class="fas fa-file-alt nav-icon"></i>
+                  <i class="fas fa-id-card-alt nav-icon text-red"></i>
                   <p>Vendor Form</p>
                 </router-link>
               </li>
               
               <li class="nav-item">
                 <router-link to="/customers" class="nav-link">
-                  <i class="fas fa-file-alt nav-icon"></i>
+                  <i class="fas fa-id-card-alt nav-icon text-green"></i>
                   <p>Customer Form</p>
+                </router-link>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-item has-treeview">
+            <a href="#" class="nav-link">
+              <i class="fab fa-wpforms nav-icon text-teal"></i>
+              <p>
+                Ticketing Invoice
+                <i class="right fa fa-angle-left"></i>
+              </p>
+            </a>
+
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <router-link to="/ticket-invoices" class="nav-link">
+                  <i class="fas fa-paste nav-icon text-red"></i>
+                  <p>Vendor Invoice</p>
+                </router-link>
+              </li>
+              
+              <li class="nav-item">
+                <router-link to="/ct-invoices" class="nav-link">
+                  <i class="fas fa-paste nav-icon text-green"></i>
+                  <p>Customer Invoice</p>
                 </router-link>
               </li>
             </ul>

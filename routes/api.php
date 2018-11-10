@@ -34,3 +34,14 @@ Route::apiResources([
 Route::apiResources([
     'customer' => 'API\CustomerController'
 ]);
+
+/*============ VENDOR TICKET INVOICE ROUTES ============*/
+Route::apiResources([
+    'ticket-invoice' => 'API\TicketInvoiceController'
+]);
+Route::get('ticket-invoice/fetch/{ticket_invoice}', 'API\TicketInvoiceController@fetch')->name('ticket-invoice.fetch');
+
+/*============ CUSTOMER TICKET INVOICE ROUTES ============*/
+Route::apiResources([
+    'ct-invoice' => 'API\CtInvoiceController'
+]);

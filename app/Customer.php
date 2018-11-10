@@ -5,6 +5,8 @@ namespace App;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
 use Illuminate\Database\Eloquent\Model;
+use App\CtInvoice;
+use App\CtInvoiceItems;
 
 class Customer extends Model
 {
@@ -25,4 +27,8 @@ class Customer extends Model
         'customer_email',
         'customer_date'             
     ];
+
+    public function ctInvoices(){
+        return $this->hasMany('App\CtInvoice');
+    }
 }

@@ -13,8 +13,9 @@ class DatabaseSeeder extends Seeder
      * @return void
      */
     public function run()
-    {
-        // $this->call(UsersTableSeeder::class);
+    {   
+        // $this->call(CtInvoiceTableSeeder::class);
+        
         $faker = Faker::create();
         foreach (range(1, 20) as $index) {
             DB::table('vendors')->insert([
@@ -37,5 +38,6 @@ class DatabaseSeeder extends Seeder
                 'customer_date' => $faker->date
             ]);
         }
+        $this->call(TicketInvoiceTableSeeder::class);
     }
 }

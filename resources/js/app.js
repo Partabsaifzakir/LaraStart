@@ -14,16 +14,33 @@ import Gate from './Gate';
 Vue.prototype.$gate = new Gate(window.user);
 /*==========END AUTHENTICATE GATE CODE==========*/
 
+/*==========AUTHENTICATE GATE CODE==========*/
+Vue.filter('toMoney', function (value) {
+    if (!value) return '$0.00'
+    
+    var formatter = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2
+    });
+  
+    return  formatter.format(value); 
+  });
+/*==========END AUTHENTICATE GATE CODE==========*/
+
+
 /*==========MOMENT CODE==========*/
 import moment from 'moment';
-import { Form, HasError, AlertError } from 'vform'
 
 Vue.filter('upText', function(text){
     return text.charAt(0).toUpperCase() + text.slice(1)
 });
-Vue.filter('myDate', function(date){
-    return moment().format("Do MMM YY");
-});
+
+Vue.filter('myDate', function(value) {
+    if (value) {
+      return moment(String(value)).format('DD-MMM-YYYY')
+    }
+  });
 /*==========END MOMENT CODE==========*/
 
 /*==========TOAST CODE==========*/
@@ -35,12 +52,14 @@ const toast = swal.mixin({
     position: 'top-end',
     showConfirmButton: false,
     timer: 3000
-  });
+});
 
 window.toast = toast;
 /*==========END TOAST CODE==========*/
 
 /*==========V-FORM VALIDATION CODE==========*/
+import { Form, HasError, AlertError } from 'vform'
+
 window.Form = Form;
 Vue.component(HasError.name, HasError)
 Vue.component(AlertError.name, AlertError)
@@ -67,7 +86,10 @@ let routes = [
     { path: '/profile', component: require('./components/Profile.vue') },
     { path: '/users', component: require('./components/Users.vue') },
     { path: '/vendors', component: require('./components/MasterForm/Vendor.vue') },
-    { path: '/customers', component: require('./components/MasterForm/Customer.vue') }
+    { path: '/customers', component: require('./components/MasterForm/Customer.vue') },
+    { path: '/ticket-invoices', component: require('./components/TicketInvoice/VendorTicketInvoice.vue') },
+    { path: '/ct-invoices', component: require('./components/TicketInvoice/CustomerTicketInvoice.vue') },
+    { name: 'ctInvoiceView', path:'/ct-invoice-view/:id', component:('ctInvoiceView', require('./components/TicketInvoice/CtInvoiceView.vue')) },
 ]
 /*==========END ALL VUE COMPONENTS CODE==========*/
 
