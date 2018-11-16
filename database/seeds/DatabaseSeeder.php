@@ -39,5 +39,7 @@ class DatabaseSeeder extends Seeder
             ]);
         }
         $this->call(TicketInvoiceTableSeeder::class);
+
+        $this->call(CtInvoiceTableSeeder::class);
     }
 }

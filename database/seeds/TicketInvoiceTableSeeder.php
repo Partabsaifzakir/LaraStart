@@ -63,6 +63,19 @@ class TicketInvoiceTableSeeder extends Seeder
                 ]));
             }
 
+            $ticket_invoice_total_tax_SB = $ticketInvoiceItems->sum('tax_SB');
+            $ticket_invoice_total_tax_SRP = $ticketInvoiceItems->sum('tax_SRP');
+            $ticket_invoice_total_tax_YQ = $ticketInvoiceItems->sum('tax_YQ');
+            $ticket_invoice_total_tax_RG = $ticketInvoiceItems->sum('tax_RG');
+            $ticket_invoice_total_tax_PK = $ticketInvoiceItems->sum('tax_PK');
+            $ticket_invoice_total_tax_YR = $ticketInvoiceItems->sum('tax_YR');
+            $ticket_invoice_total_tax_SF = $ticketInvoiceItems->sum('tax_SF');
+            $ticket_invoice_total_tax_PTT = $ticketInvoiceItems->sum('tax_PTT');
+            $ticket_invoice_total_tax_OAS = $ticketInvoiceItems->sum('tax_OAS');
+            $ticket_invoice_total_tax_PSF = $ticketInvoiceItems->sum('tax_PSF');
+            $ticket_invoice_total_tax_PB = $ticketInvoiceItems->sum('tax_PB');
+            $ticket_invoice_total_tax_OAD = $ticketInvoiceItems->sum('tax_OAD');
+
             $ticket_invoice_fares_total = $ticketInvoiceItems->sum('fares');
             $ticket_invoice_taxes_grand_total = $ticketInvoiceItems->sum('total_tax_breakup');
             $ticket_invoice_grand_total = $ticket_invoice_fares_total + $ticket_invoice_taxes_grand_total;
@@ -73,7 +86,20 @@ class TicketInvoiceTableSeeder extends Seeder
                 'ticket_invoice_date' => $faker->date,
                 'ticket_invoice_fares_total' => $ticket_invoice_fares_total,
                 'ticket_invoice_taxes_grand_total' => $ticket_invoice_taxes_grand_total,
-                'ticket_invoice_grand_total' => $ticket_invoice_grand_total
+                'ticket_invoice_grand_total' => $ticket_invoice_grand_total,
+
+                'ticket_invoice_total_tax_SB' => $ticket_invoice_total_tax_SB,
+                'ticket_invoice_total_tax_SRP' => $ticket_invoice_total_tax_SRP,
+                'ticket_invoice_total_tax_YQ' => $ticket_invoice_total_tax_YQ,
+                'ticket_invoice_total_tax_RG' => $ticket_invoice_total_tax_RG,
+                'ticket_invoice_total_tax_PK' => $ticket_invoice_total_tax_PK,
+                'ticket_invoice_total_tax_YR' => $ticket_invoice_total_tax_YR,
+                'ticket_invoice_total_tax_SF' => $ticket_invoice_total_tax_SF,
+                'ticket_invoice_total_tax_PTT' => $ticket_invoice_total_tax_PTT,
+                'ticket_invoice_total_tax_OAS' => $ticket_invoice_total_tax_OAS,
+                'ticket_invoice_total_tax_PSF' => $ticket_invoice_total_tax_PSF,
+                'ticket_invoice_total_tax_PB' => $ticket_invoice_total_tax_PB,
+                'ticket_invoice_total_tax_OAD' => $ticket_invoice_total_tax_OAD
             ]);
 
             $ticketInvoice->ticketInvoiceItems()->saveMany($ticketInvoiceItems);

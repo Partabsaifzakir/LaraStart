@@ -45,7 +45,7 @@
                     <th>Modify</th>
                   </tr>
                   
-                  <tr v-for="ticketInvoice in ticketInvoices" :key="ticketInvoice.id">
+                  <tr v-for="ticketInvoice in ticketInvoices.data" :key="ticketInvoice.id">
                     <td>{{ ticketInvoice.ticket_invoice_no }}</td>
                     <td>{{ ticketInvoice.vendor.vendor_company_name }}</td>
                     <td>{{ ticketInvoice.ticket_invoice_date | myDate}}</td>
@@ -63,6 +63,9 @@
                 </tbody></table>
               </div>
               <!-- /.card-body -->
+              <div class="card-footer">
+                <pagination :data="ticketInvoices" @pagination-change-page="getResults"></pagination>
+              </div>
             </div>
             </div>
         </div>
@@ -77,7 +80,7 @@
                 <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-
+            
             <form @submit.prevent="editmode ? updateTicketInvoice() : createTicketInvoice()">
             <div class="modal-body">
               <div class="row">
@@ -256,6 +259,33 @@
                     <td  id="borderless" class="table-empty" colspan="5"><strong></strong></td> 
                     <td  id="fillcolor" class="table-label" colspan="3"><strong>Taxes</strong></td>
                     <td  class="table-amount">
+                      
+                      <!-- ==========TAXES INDIVIDUAL TOTAL========== -->
+                      <input :value="getTaxSBTotal()" type="hidden" readonly name="ticket_invoice_total_tax_SB" class="form-control" :class="{ 'is-invalid': form.errors.has('ticket_invoice_total_tax_SB') }">
+
+                      <input :value="getTaxSRPTotal()" type="hidden" readonly name="ticket_invoice_total_tax_SRP" class="form-control" :class="{ 'is-invalid': form.errors.has('ticket_invoice_total_tax_SRP') }">
+                      
+                      <input :value="getTaxYQTotal()" type="hidden" readonly name="ticket_invoice_total_tax_YQ" class="form-control" :class="{ 'is-invalid': form.errors.has('ticket_invoice_total_tax_YQ') }">
+                      
+                      <input :value="getTaxRGTotal()" type="hidden" readonly name="ticket_invoice_total_tax_RG" class="form-control" :class="{ 'is-invalid': form.errors.has('ticket_invoice_total_tax_RG') }">
+                      
+                      <input :value="getTaxPKTotal()" type="hidden" readonly name="ticket_invoice_total_tax_PK" class="form-control" :class="{ 'is-invalid': form.errors.has('ticket_invoice_total_tax_PK') }">
+                      
+                      <input :value="getTaxYRTotal()" type="hidden" readonly name="ticket_invoice_total_tax_YR" class="form-control" :class="{ 'is-invalid': form.errors.has('ticket_invoice_total_tax_YR') }">
+                      
+                      <input :value="getTaxSFTotal()" type="hidden" readonly name="ticket_invoice_total_tax_SF" class="form-control" :class="{ 'is-invalid': form.errors.has('ticket_invoice_total_tax_SF') }">
+                      
+                      <input :value="getTaxPTTTotal()" type="hidden" readonly name="ticket_invoice_total_tax_PTT" class="form-control" :class="{ 'is-invalid': form.errors.has('ticket_invoice_total_tax_PTT') }">
+                      
+                      <input :value="getTaxOASTotal()" type="hidden" readonly name="ticket_invoice_total_tax_OAS" class="form-control" :class="{ 'is-invalid': form.errors.has('ticket_invoice_total_tax_OAS') }">
+                      
+                      <input :value="getTaxPSFTotal()" type="hidden" readonly name="ticket_invoice_total_tax_PSF" class="form-control" :class="{ 'is-invalid': form.errors.has('ticket_invoice_total_tax_PSF') }">
+                      
+                      <input :value="getTaxPBTotal()" type="hidden" readonly name="ticket_invoice_total_tax_PB" class="form-control" :class="{ 'is-invalid': form.errors.has('ticket_invoice_total_tax_PB') }">
+                      
+                      <input :value="getTaxOADTotal()" type="hidden" readonly name="ticket_invoice_total_tax_OAD" class="form-control" :class="{ 'is-invalid': form.errors.has('ticket_invoice_total_tax_OAD') }">
+                      
+                      <!-- ==========TAX GRAND TOTAL========== -->
                       <input :value="getTaxGTotal()" type="text" readonly name="ticket_invoice_taxes_grand_total" class="form-control" :class="{ 'is-invalid': form.errors.has('ticket_invoice_taxes_grand_total') }"></td> 
                     </tr>
 
@@ -304,6 +334,18 @@ export default {
         ticket_invoice_grand_total: 0,
         ticket_invoice_grand_total_words: "",
         ticket_invoice_terms: "",
+        ticket_invoice_total_tax_SB: 0,
+        ticket_invoice_total_tax_SRP: 0,
+        ticket_invoice_total_tax_YQ: 0,
+        ticket_invoice_total_tax_RG: 0,
+        ticket_invoice_total_tax_PK: 0,
+        ticket_invoice_total_tax_YR: 0,
+        ticket_invoice_total_tax_SF: 0,
+        ticket_invoice_total_tax_PTT: 0,
+        ticket_invoice_total_tax_OAS: 0,
+        ticket_invoice_total_tax_PSF: 0,
+        ticket_invoice_total_tax_PB: 0,
+        ticket_invoice_total_tax_OAD: 0,
 
         ticketInvoiceItems: [
           {
@@ -335,6 +377,155 @@ export default {
     };
   },
   methods: {
+    getResults(page = 1) {
+      axios.get("api/ticket-invoice?page=" + page).then(response => {
+        this.ticketInvoices = response.data;
+      });
+    },
+    /*=====TOTAL SB=====*/
+    getTaxSBTotal() {
+      let calTaxSBTotal = 0;
+
+      Object.values(this.form.ticketInvoiceItems).forEach(
+        i => (calTaxSBTotal += parseFloat(i.tax_SB))
+      );
+
+      this.form.ticket_invoice_total_tax_SB = calTaxSBTotal;
+
+      return calTaxSBTotal;
+    },
+    /*=====TOTAL SRP=====*/
+    getTaxSRPTotal() {
+      let calTaxSRPTotal = 0;
+
+      Object.values(this.form.ticketInvoiceItems).forEach(
+        i => (calTaxSRPTotal += parseFloat(i.tax_SRP))
+      );
+
+      this.form.ticket_invoice_total_tax_SRP = calTaxSRPTotal;
+
+      return calTaxSRPTotal;
+    },
+    /*=====TOTAL YQ=====*/
+    getTaxYQTotal() {
+      let calTaxYQTotal = 0;
+
+      Object.values(this.form.ticketInvoiceItems).forEach(
+        i => (calTaxYQTotal += parseFloat(i.tax_YQ))
+      );
+
+      this.form.ticket_invoice_total_tax_YQ = calTaxYQTotal;
+
+      return calTaxYQTotal;
+    },
+    /*=====TOTAL RG=====*/
+    getTaxRGTotal() {
+      let calTaxRGTotal = 0;
+
+      Object.values(this.form.ticketInvoiceItems).forEach(
+        i => (calTaxRGTotal += parseFloat(i.tax_RG))
+      );
+
+      this.form.ticket_invoice_total_tax_RG = calTaxRGTotal;
+
+      return calTaxRGTotal;
+    },
+    /*=====TOTAL PK=====*/
+    getTaxPKTotal() {
+      let calTaxPKTotal = 0;
+
+      Object.values(this.form.ticketInvoiceItems).forEach(
+        i => (calTaxPKTotal += parseFloat(i.tax_PK))
+      );
+
+      this.form.ticket_invoice_total_tax_PK = calTaxPKTotal;
+
+      return calTaxPKTotal;
+    },
+    /*=====TOTAL YR=====*/
+    getTaxYRTotal() {
+      let calTaxYRTotal = 0;
+
+      Object.values(this.form.ticketInvoiceItems).forEach(
+        i => (calTaxYRTotal += parseFloat(i.tax_YR))
+      );
+
+      this.form.ticket_invoice_total_tax_YR = calTaxYRTotal;
+
+      return calTaxYRTotal;
+    },
+    /*=====TOTAL SF=====*/
+    getTaxSFTotal() {
+      let calTaxSFTotal = 0;
+
+      Object.values(this.form.ticketInvoiceItems).forEach(
+        i => (calTaxSFTotal += parseFloat(i.tax_SF))
+      );
+
+      this.form.ticket_invoice_total_tax_SF = calTaxSFTotal;
+
+      return calTaxSFTotal;
+    },
+    /*=====TOTAL PTT=====*/
+    getTaxPTTTotal() {
+      let calTaxPTTTotal = 0;
+
+      Object.values(this.form.ticketInvoiceItems).forEach(
+        i => (calTaxPTTTotal += parseFloat(i.tax_PTT))
+      );
+
+      this.form.ticket_invoice_total_tax_PTT = calTaxPTTTotal;
+
+      return calTaxPTTTotal;
+    },
+    /*=====TOTAL OAS=====*/
+    getTaxOASTotal() {
+      let calTaxOASTotal = 0;
+
+      Object.values(this.form.ticketInvoiceItems).forEach(
+        i => (calTaxOASTotal += parseFloat(i.tax_OAS))
+      );
+
+      this.form.ticket_invoice_total_tax_OAS = calTaxOASTotal;
+
+      return calTaxOASTotal;
+    },
+    /*=====TOTAL PSF=====*/
+    getTaxPSFTotal() {
+      let calTaxPSFTotal = 0;
+
+      Object.values(this.form.ticketInvoiceItems).forEach(
+        i => (calTaxPSFTotal += parseFloat(i.tax_PSF))
+      );
+
+      this.form.ticket_invoice_total_tax_PSF = calTaxPSFTotal;
+
+      return calTaxPSFTotal;
+    },
+    /*=====TOTAL PB=====*/
+    getTaxPBTotal() {
+      let calTaxPBTotal = 0;
+
+      Object.values(this.form.ticketInvoiceItems).forEach(
+        i => (calTaxPBTotal += parseFloat(i.tax_PB))
+      );
+
+      this.form.ticket_invoice_total_tax_PB = calTaxPBTotal;
+
+      return calTaxPBTotal;
+    },
+    /*=====TOTAL OAD=====*/
+    getTaxOADTotal() {
+      let calTaxOADTotal = 0;
+
+      Object.values(this.form.ticketInvoiceItems).forEach(
+        i => (calTaxOADTotal += parseFloat(i.tax_OAD))
+      );
+
+      this.form.ticket_invoice_total_tax_OAD = calTaxOADTotal;
+
+      return calTaxOADTotal;
+    },
     getTotalTaxes(key) {
       let calTaxTotal =
         parseInt(this.form.ticketInvoiceItems[key].tax_SB) +
@@ -368,8 +559,10 @@ export default {
 
       // console.log("1 => ", this.form);
       // console.log("2 =>", this.form.ticketInvoiceItems);//this puts  undefined why ?
-      
-      Object.values(this.form.ticketInvoiceItems).forEach(i => (calFareTotal +=parseFloat(i.fares)));
+
+      Object.values(this.form.ticketInvoiceItems).forEach(
+        i => (calFareTotal += parseFloat(i.fares))
+      );
 
       this.form.ticket_invoice_fares_total = calFareTotal;
 
@@ -378,7 +571,6 @@ export default {
     getTaxGTotal() {
       let calTaxGTotal = 0;
 
-      
       this.form.ticketInvoiceItems.forEach(
         i => (calTaxGTotal += i.total_tax_breakup)
       );
@@ -403,7 +595,7 @@ export default {
     loadTicketInvoices() {
       axios
         .get("api/ticket-invoice")
-        .then(({ data }) => (this.ticketInvoices = data.data));
+        .then(({ data }) => (this.ticketInvoices = data));
     },
     /*=================END LOAD TICKET INVOICE CODE=================*/
 
@@ -440,11 +632,11 @@ export default {
       this.form.reset();
       this.form.clear();
       $("#addNewTicketInvoice").modal("show");
-      // console.log("edit  => ",ticketInvoice)
+      //  console.log("edit  => ",ticketInvoice)
       this.form.fill(ticketInvoice);
 
-      this.form.ticketInvoiceItems=ticketInvoice.ticket_invoice_items;
-      
+      this.form.ticketInvoiceItems = ticketInvoice.ticket_invoice_items;
+
       // console.log("after fill  => ",this.form)
     },
     /*==============END EDIT INVOICE CODE==============*/
@@ -503,6 +695,15 @@ export default {
   /*=================OPEN NEW MODEL CODE=================*/
 
   mounted() {
+    Fire.$on("searching", () => {
+      let query = this.$parent.search;
+      axios
+        .get("api/findVTI?q=" + query)
+        .then(data => {
+          this.ticketInvoices = data.data;
+        })
+        .catch();
+    });
     this.loadTicketInvoices();
     Fire.$on("RefreshTable", () => {
       this.loadTicketInvoices();

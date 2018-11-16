@@ -19,7 +19,7 @@ class TicketInvoiceController extends Controller
      */
     public function index()
     {
-        $ticketInvoices = TicketInvoice::orderBy('created_at', 'desc')->paginate(20);
+        $ticketInvoices = TicketInvoice::orderBy('created_at', 'desc')->paginate(10);
         $ticketInvoiceItems = TicketInvoiceItems::all();
         $vendors = Vendor::all();
 
@@ -35,7 +35,7 @@ class TicketInvoiceController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
-    {
+    {   
         $ticketInvoiceItems = collect();
 
         foreach($request['ticketInvoiceItems'] as $invoiceItem) {
@@ -71,7 +71,20 @@ class TicketInvoiceController extends Controller
             'ticket_invoice_taxes_grand_total' => $request['ticket_invoice_taxes_grand_total'],
             'ticket_invoice_grand_total' => $request['ticket_invoice_grand_total'],
             'ticket_invoice_grand_total_words' => $request ['ticket_invoice_grand_total_words'],
-            'ticket_invoice_terms' => $request ['ticket_invoice_terms']
+            'ticket_invoice_terms' => $request ['ticket_invoice_terms'],
+
+            'ticket_invoice_total_tax_SB' => $request['ticket_invoice_total_tax_SB'],
+            'ticket_invoice_total_tax_SRP' => $request['ticket_invoice_total_tax_SRP'],
+            'ticket_invoice_total_tax_YQ' => $request['ticket_invoice_total_tax_YQ'],
+            'ticket_invoice_total_tax_RG' => $request['ticket_invoice_total_tax_RG'],
+            'ticket_invoice_total_tax_PK' => $request['ticket_invoice_total_tax_PK'],
+            'ticket_invoice_total_tax_YR' => $request['ticket_invoice_total_tax_YR'],
+            'ticket_invoice_total_tax_SF' => $request['ticket_invoice_total_tax_SF'],
+            'ticket_invoice_total_tax_PTT' => $request['ticket_invoice_total_tax_PTT'],
+            'ticket_invoice_total_tax_OAS' => $request['ticket_invoice_total_tax_OAS'],
+            'ticket_invoice_total_tax_PSF' => $request['ticket_invoice_total_tax_PSF'],
+            'ticket_invoice_total_tax_PB' => $request['ticket_invoice_total_tax_PB'],
+            'ticket_invoice_total_tax_OAD' => $request['ticket_invoice_total_tax_OAD']
         ]);
 
         $ticketInvoice->ticketInvoiceItems()->saveMany($ticketInvoiceItems);
@@ -127,6 +140,20 @@ class TicketInvoiceController extends Controller
             'ct_invoice_no' => $ticketInvoices->ticket_invoice_no,
             'ct_invoice_date' => $ticketInvoices->ticket_invoice_date,
             'ct_invoice_fares_total' => $ticketInvoices->ticket_invoice_fares_total,
+
+            'ct_invoice_total_tax_SB' => $ticketInvoices->ticket_invoice_total_tax_SB,
+            'ct_invoice_total_tax_SRP' => $ticketInvoices->ticket_invoice_total_tax_SRP,
+            'ct_invoice_total_tax_YQ' => $ticketInvoices->ticket_invoice_total_tax_YQ,
+            'ct_invoice_total_tax_RG' => $ticketInvoices->ticket_invoice_total_tax_RG,
+            'ct_invoice_total_tax_PK' => $ticketInvoices->ticket_invoice_total_tax_PK,
+            'ct_invoice_total_tax_YR' => $ticketInvoices->ticket_invoice_total_tax_YR,
+            'ct_invoice_total_tax_SF' => $ticketInvoices->ticket_invoice_total_tax_SF,
+            'ct_invoice_total_tax_PTT' => $ticketInvoices->ticket_invoice_total_tax_PTT,
+            'ct_invoice_total_tax_OAS' => $ticketInvoices->ticket_invoice_total_tax_OAS,
+            'ct_invoice_total_tax_PSF' => $ticketInvoices->ticket_invoice_total_tax_PSF,
+            'ct_invoice_total_tax_PB' => $ticketInvoices->ticket_invoice_total_tax_PB,
+            'ct_invoice_total_tax_OAD' => $ticketInvoices->ticket_invoice_total_tax_OAD,
+
             'ct_invoice_taxes_grand_total' => $ticketInvoices->ticket_invoice_taxes_grand_total,
             'ct_invoice_grand_total' => $ticketInvoices->ticket_invoice_grand_total,
             'ct_invoice_grand_total_words' => $ticketInvoices->ticket_invoice_grand_total_words,
@@ -159,5 +186,26 @@ class TicketInvoiceController extends Controller
                 ];
             })->all()
         ]);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function searchVTI()
+    {
+        if($search = \Request::get('q')){
+            $VTI = TicketInvoice::where(function($query) use ($search){
+                $query->where('ticket_invoice_no','LIKE',"%$search%")
+                      ->orWhereHas('vendor', function($query) use ($search){
+                        $query->where('vendor_company_name', 'LIKE', "%{$search}%");
+                      });
+            })->paginate(10);
+        }else{
+            return TicketInvoice::paginate(10);
+        }
+        return $VTI;
     }
 }

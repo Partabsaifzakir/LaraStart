@@ -18,7 +18,7 @@ class CustomerController extends Controller
      */
     public function index()
     {
-        $customer = Customer::paginate(20);
+        $customer = Customer::paginate(10);
 
         return $customer;
     }
@@ -103,5 +103,26 @@ class CustomerController extends Controller
         $customer->delete();
 
         return['message', 'Customer Deleted'];
+    }
+
+        /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function searchCustomers()
+    {
+        if($search = \Request::get('q')){
+            $customers = Customer::where(function($query) use ($search){
+                $query->where('customer_company_name','LIKE',"%$search%")
+                      ->orWhere('customer_email','LIKE',"%$search%")
+                      ->orWhere('customer_type','LIKE',"%$search%");
+                      
+            })->paginate(10);
+        }else{
+            return Customer::paginate(10);
+        }
+        return $customers;
     }
 }

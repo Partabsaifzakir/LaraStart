@@ -5,7 +5,7 @@
               <div class="row">
                 <div class="col-3">
                   <span class="brand-text font-weight-light"><img src="/img/globe.png" alt="Invoice Logo"></span><br>
-                  <small>Govt. License No. 1579<br>NTN & STN 2541235-8 </small>
+                  <small>Govt. License No. 1579<br>NTN  STN 2541235-8 </small>
                 </div>
                 <div style="text-align: center;" class="col-6">
                   <span class="brand-text font-weight-light"><img src="/img/name.png" alt="Invoice Logo"></span>
@@ -16,7 +16,7 @@
 
               <!-- ========CUSTOMER INFO======== -->
               <div class="row invoice-info">
-                <div class="col-sm-4 invoice-col">
+                <div class="col-sm-4 invoice-col" >
                   <address>
                     <strong>Customer Info</strong><br>
                     <b>Name:</b> <span>{{form.customer.customer_name}}</span><br>
@@ -54,47 +54,16 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr>
-                      <td>Saif Zakir</td>
-                      <td>835-7368-195-985</td>
-                      <td>TK 506</td>
-                      <td>15-Dec-2018</td>
-                      <td>KHI-LHR-ISM</td>
-                      <td>Rs.2,000</td>
-                      <td>Rs.1,000</td>
-                      <td>Rs.3,000</td>
+                    <tr v-for="(ctInvoiceItem, key) in form.ct_invoice_items" :key="key">
+                      <td>{{ctInvoiceItem.ct_passenger_name}}</td>
+                      <td>{{ctInvoiceItem.ct_ticket_no}}</td>
+                      <td>{{ctInvoiceItem.ct_flight_no}}</td>
+                      <td>{{ctInvoiceItem.ct_departure_date}}</td>
+                      <td>{{ctInvoiceItem.ct_sector}}</td>
+                      <td>PKR {{formatPrice(ctInvoiceItem.ct_total_tax_breakup)}}</td>
+                      <td>PKR {{formatPrice(ctInvoiceItem.ct_fares)}}</td>
+                      <td>PKR {{formatPrice(ctInvoiceItem.ct_sub_total)}}</td>
                     </tr>
-                    <tr>
-                      <td>Daniyal Ali</td>
-                      <td>835-7368-195-985</td>
-                      <td>TK 506</td>
-                      <td>15-Dec-2018</td>
-                      <td>KHI-LHR-ISM</td>
-                      <td>Rs.2,000</td>
-                      <td>Rs.1,000</td>
-                      <td>Rs.3,000</td>
-                    </tr>
-                    <tr>
-                      <td>Azam Khan</td>
-                      <td>835-7368-195-985</td>
-                      <td>TK 506</td>
-                      <td>15-Dec-2018</td>
-                      <td>KHI-LHR-ISM</td>
-                      <td>Rs.2,000</td>
-                      <td>Rs.1,000</td>
-                      <td>Rs.3,000</td>
-                    </tr>
-                    <tr>
-                      <td>Ali Raza</td>
-                      <td>835-7368-195-985</td>
-                      <td>TK 506</td>
-                      <td>15-Dec-2018</td>
-                      <td>KHI-LHR-ISM</td>
-                      <td>Rs.2,000</td>
-                      <td>Rs.1,000</td>
-                      <td>Rs.3,000</td>
-                    </tr>
-                    
                     </tbody>
                   </table>
                 </div>
@@ -107,18 +76,18 @@
                 <div class="col-8">
                   <p class="lead">Taxes Break Up</p>
                   <small class="text-muted well well-sm no-shadow" style="margin-top: 10px;">
-                    <strong>Tax SB:</strong><span>{{form.ct_invoice_items.ct_tax_SB}}</span>
-                    <strong>Tax SRP:</strong><span> 100 </span>
-                    <strong>Tax YQ:</strong> <span> 100 </span>
-                    <strong>Tax RG:</strong><span> 100 </span>
-                    <strong>Tax PK:</strong><span> 100 </span>
-                    <strong>Tax YR:</strong><span> 100 </span><br>
-                    <strong>Tax SF:</strong> <span> 100 </span> 
-                    <strong>Tax PTT:</strong><span> 100 </span>
-                    <strong>Tax OAS:</strong><span> 100 </span> 
-                    <strong>Tax PSF:</strong><span> 100 </span> 
-                    <strong>Tax PB:</strong> <span> 100 </span> 
-                    <strong>Tax OAD:</strong><span> 100 </span>
+                    <strong>Tax SB:</strong><span> {{formatPrice(form.ct_invoice_total_tax_SB)}} </span>
+                    <strong>Tax SRP:</strong><span> {{formatPrice(form.ct_invoice_total_tax_SRP)}} </span>
+                    <strong>Tax YQ:</strong> <span> {{formatPrice(form.ct_invoice_total_tax_YQ)}} </span>
+                    <strong>Tax RG:</strong><span> {{formatPrice(form.ct_invoice_total_tax_RG)}} </span>
+                    <strong>Tax PK:</strong><span> {{formatPrice(form.ct_invoice_total_tax_PK)}} </span>
+                    <strong>Tax YR:</strong><span> {{formatPrice(form.ct_invoice_total_tax_YR)}} </span><br>
+                    <strong>Tax SF:</strong> <span> {{formatPrice(form.ct_invoice_total_tax_SF)}} </span> 
+                    <strong>Tax PTT:</strong><span> {{formatPrice(form.ct_invoice_total_tax_PTT)}} </span>
+                    <strong>Tax OAS:</strong><span> {{formatPrice(form.ct_invoice_total_tax_OAS)}} </span> 
+                    <strong>Tax PSF:</strong><span> {{formatPrice(form.ct_invoice_total_tax_PSF)}} </span> 
+                    <strong>Tax PB:</strong> <span> {{formatPrice(form.ct_invoice_total_tax_PB)}} </span> 
+                    <strong>Tax OAD:</strong><span> {{formatPrice(form.ct_invoice_total_tax_OAD)}} </span>
                   </small>
                   <p class="lead">
                     <small class="text-muted well well-sm no-shadow">
@@ -134,15 +103,15 @@
                       <tbody>
                       <tr>
                         <th style="width:50%">Total Taxes</th>
-                        <td>$250.30</td>
+                        <td>PKR {{formatPrice(form.ct_invoice_taxes_grand_total)}}</td>
                       </tr>
                       <tr>
                         <th>Total Fares</th>
-                        <td>$10.34</td>
+                        <td>PKR {{formatPrice(form.ct_invoice_fares_total)}}</td>
                       </tr>
                       <tr>
                         <th>Grand Total</th>
-                        <td>$5.80</td>
+                        <td>PKR {{formatPrice(form.ct_invoice_grand_total)}}</td>
                       </tr>
                     </tbody></table>
                   </div>
@@ -155,9 +124,8 @@
               <div class="row no-print">
                 <div class="col-12">
                   <a href="#" class="btn btn-default"><i class="fa fa-print"></i> Print</a>
-                  <button type="button" class="btn btn-success float-right"><i class="fa fa-credit-card"></i> Submit
-                    Payment
-                  </button>
+                  <router-link to="/ct-invoices" class="btn btn-success float-right"><i class="fas fa-backspace"></i> Back
+                  </router-link>
                   <button type="button" class="btn btn-primary float-right" style="margin-right: 5px;">
                     <i class="fa fa-download"></i> Generate PDF
                   </button>
@@ -172,7 +140,7 @@ export default {
   data() {
     return {
       ctInvoices: {},
-      id:{},
+      id: {},
       customers: null,
       form: new Form({
         id: "",
@@ -184,6 +152,19 @@ export default {
         ct_invoice_grand_total: "",
         ct_invoice_grand_total_words: "",
         ct_invoice_terms: "",
+
+        ct_invoice_total_tax_SB: 0,
+        ct_invoice_total_tax_SRP: 0,
+        ct_invoice_total_tax_YQ: 0,
+        ct_invoice_total_tax_RG: 0,
+        ct_invoice_total_tax_PK: 0,
+        ct_invoice_total_tax_YR: 0,
+        ct_invoice_total_tax_SF: 0,
+        ct_invoice_total_tax_PTT: 0,
+        ct_invoice_total_tax_OAS: 0,
+        ct_invoice_total_tax_PSF: 0,
+        ct_invoice_total_tax_PB: 0,
+        ct_invoice_total_tax_OAD: 0,
 
         ctInvoiceItems: [
           {
@@ -215,6 +196,11 @@ export default {
     };
   },
   methods: {
+    formatPrice(value) {
+      let val = (value / 1).toFixed().replace(".", ",");
+
+      return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); //75.674,00
+    },
     loadCustomers() {
       axios
         .get("/api/customer")

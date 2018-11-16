@@ -24,7 +24,7 @@
                     <th>Modify</th>
                   </tr>
                   
-                  <tr v-for="customer in customers" :key="customer.id">
+                  <tr v-for="customer in customers.data" :key="customer.id">
                     <td>{{ customer.customer_name | upText}}</td>
                     <td v-if="customer.customer_company_name!==undefined && customer.customer_company_name!=null">{{ customer.customer_company_name | upText}}</td>
                     <td v-else>--------------</td>
@@ -45,6 +45,9 @@
                 </tbody></table>
               </div>
               <!-- /.card-body -->
+              <div class="card-footer">
+                <pagination :data="customers" @pagination-change-page="getResults"></pagination>
+              </div>
             </div>
             </div>
         </div>
@@ -159,6 +162,11 @@ export default {
     };
   },
   methods: {
+    getResults(page = 1) {
+      axios.get("api/customer?page=" + page).then(response => {
+        this.customers = response.data;
+      });
+    },
     newModel() {
       this.editmode = false;
       this.form.reset();
@@ -167,7 +175,7 @@ export default {
     },
     /*==============LOADING CUSTOMER==============*/
     loadCustomers() {
-      axios.get("api/customer").then(({ data }) => (this.customers = data.data));
+      axios.get("api/customer").then(({ data }) => (this.customers = data));
     },
     /*==============END LOADING CUSTOMER==============*/
 
@@ -260,6 +268,15 @@ export default {
   },
 
   mounted() {
+    Fire.$on('searching', () => {
+      
+      let query = this.$parent.search;
+      axios.get('api/findCustomer?q=' + query)
+      .then((data) => {
+        this.customers = data.data;
+      })
+      .catch()
+    })
     this.loadCustomers();
     Fire.$on("RefreshTable", () => {
       this.loadCustomers();

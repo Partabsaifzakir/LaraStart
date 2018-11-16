@@ -18,7 +18,7 @@ class CtInvoiceController extends Controller
      */
     public function index()
     {
-        $ctInvoices = CtInvoice::orderBy('created_at', 'desc')->paginate(20);
+        $ctInvoices = CtInvoice::orderBy('created_at', 'desc')->paginate(10);
         $ctInvoiceItems = CtInvoiceItems::all();
         $customers = Customer::all();
 
@@ -67,6 +67,21 @@ class CtInvoiceController extends Controller
             'ct_invoice_no' => $request['ct_invoice_no'],
             'ct_invoice_date' => $request['ct_invoice_date'],
             'ct_invoice_fares_total' => $request['ct_invoice_fares_total'],
+
+            'ct_invoice_total_tax_SB' => $request['ct_invoice_total_tax_SB'],
+            'ct_invoice_total_tax_SRP' => $request['ct_invoice_total_tax_SRP'],
+            'ct_invoice_total_tax_YQ' => $request['ct_invoice_total_tax_YQ'],
+            'ct_invoice_total_tax_RG' => $request['ct_invoice_total_tax_RG'],
+            'ct_invoice_total_tax_PK' => $request['ct_invoice_total_tax_PK'],
+            'ct_invoice_total_tax_YR' => $request['ct_invoice_total_tax_YR'],
+            'ct_invoice_total_tax_SF' => $request['ct_invoice_total_tax_SF'],
+            'ct_invoice_total_tax_PTT' => $request['ct_invoice_total_tax_PTT'],
+            'ct_invoice_total_tax_OAS' => $request['ct_invoice_total_tax_OAS'],
+            'ct_invoice_total_tax_PSF' => $request['ct_invoice_total_tax_PSF'],
+            'ct_invoice_total_tax_PB' => $request['ct_invoice_total_tax_PB'],
+            'ct_invoice_total_tax_OAD' => $request['ct_invoice_total_tax_OAD'],
+
+
             'ct_invoice_taxes_grand_total' => $request['ct_invoice_taxes_grand_total'],
             'ct_invoice_grand_total' => $request['ct_invoice_grand_total'],
             'ct_invoice_grand_total_words' => $request ['ct_invoice_grand_total_words'],

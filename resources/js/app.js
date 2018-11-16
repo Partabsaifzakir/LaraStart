@@ -65,6 +65,8 @@ Vue.component(HasError.name, HasError)
 Vue.component(AlertError.name, AlertError)
 /*==========END V-FORM VALIDATION CODE==========*/
 
+Vue.component('pagination', require('laravel-vue-pagination'));
+
 /*==========PROGRESS BAR CODE==========*/
 import VueProgressBar from 'vue-progressbar'
 Vue.use(VueProgressBar, {
@@ -141,5 +143,13 @@ Vue.component('example-component', require('./components/ExampleComponent.vue'))
 
 const app = new Vue({
     el: '#app',
-    router
+    router,
+    data:{
+        search: ''
+    },
+    methods:{
+        searchit: _.debounce(() => {
+            Fire.$emit('searching')
+        }, 500)
+    }
 });

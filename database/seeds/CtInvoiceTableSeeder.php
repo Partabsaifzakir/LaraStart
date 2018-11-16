@@ -74,6 +74,19 @@ class CtInvoiceTableSeeder extends Seeder
                 ]));
             } 
 
+            $ct_invoice_total_tax_SB = $ctInvoiceItems->sum('ct_tax_SB');
+            $ct_invoice_total_tax_SRP = $ctInvoiceItems->sum('ct_tax_SRP');
+            $ct_invoice_total_tax_YQ = $ctInvoiceItems->sum('ct_tax_YQ');
+            $ct_invoice_total_tax_RG = $ctInvoiceItems->sum('ct_tax_RG');
+            $ct_invoice_total_tax_PK = $ctInvoiceItems->sum('ct_tax_PK');
+            $ct_invoice_total_tax_YR = $ctInvoiceItems->sum('ct_tax_YR');
+            $ct_invoice_total_tax_SF = $ctInvoiceItems->sum('ct_tax_SF');
+            $ct_invoice_total_tax_PTT = $ctInvoiceItems->sum('ct_tax_PTT');
+            $ct_invoice_total_tax_OAS = $ctInvoiceItems->sum('ct_tax_OAS');
+            $ct_invoice_total_tax_PSF = $ctInvoiceItems->sum('ct_tax_PSF');
+            $ct_invoice_total_tax_PB = $ctInvoiceItems->sum('ct_tax_PB');
+            $ct_invoice_total_tax_OAD = $ctInvoiceItems->sum('ct_tax_OAD');
+
             $ct_invoice_fares_total = $ctInvoiceItems->sum('ct_fares');
             $ct_invoice_taxes_grand_total = $ctInvoiceItems->sum('ct_total_tax_breakup');
             $ct_invoice_grand_total = $ct_invoice_fares_total + $ct_invoice_taxes_grand_total;
@@ -83,6 +96,20 @@ class CtInvoiceTableSeeder extends Seeder
                 'ct_invoice_no' => $faker->numerify('CTI-###-######'),
                 'ct_invoice_date' => $faker->date,
                 'ct_invoice_fares_total' => $ct_invoice_fares_total,
+
+                'ct_invoice_total_tax_SB' => $ct_invoice_total_tax_SB,
+                'ct_invoice_total_tax_SRP' => $ct_invoice_total_tax_SRP,
+                'ct_invoice_total_tax_YQ' => $ct_invoice_total_tax_YQ,
+                'ct_invoice_total_tax_RG' => $ct_invoice_total_tax_RG,
+                'ct_invoice_total_tax_PK' => $ct_invoice_total_tax_PK,
+                'ct_invoice_total_tax_YR' => $ct_invoice_total_tax_YR,
+                'ct_invoice_total_tax_SF' => $ct_invoice_total_tax_SF,
+                'ct_invoice_total_tax_PTT' => $ct_invoice_total_tax_PTT,
+                'ct_invoice_total_tax_OAS' => $ct_invoice_total_tax_OAS,
+                'ct_invoice_total_tax_PSF' => $ct_invoice_total_tax_PSF,
+                'ct_invoice_total_tax_PB' => $ct_invoice_total_tax_PB,
+                'ct_invoice_total_tax_OAD' => $ct_invoice_total_tax_OAD,
+
                 'ct_invoice_taxes_grand_total' => $ct_invoice_taxes_grand_total,
                 'ct_invoice_grand_total' => $ct_invoice_grand_total
             ]);

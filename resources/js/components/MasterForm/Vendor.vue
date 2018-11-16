@@ -1,12 +1,11 @@
 <style>
 .modal-full {
-    min-width: auto;
-    margin: auto;
-    
+  min-width: auto;
+  margin: auto;
 }
 
 .modal-full .modal-content {
-    min-height: auto;
+  min-height: auto;
 }
 </style>
 
@@ -36,7 +35,7 @@
                     <th>Modify</th>
                   </tr>
                   
-                  <tr v-for="vendor in vendors" :key="vendor.id">
+                  <tr v-for="vendor in vendors.data" :key="vendor.id">
                     <td>{{ vendor.vendor_company_name | upText }}</td>
                     <td>{{ vendor.vendor_contact }}</td>
                     <td>{{ vendor.vendor_person_name | upText}}</td>
@@ -54,6 +53,9 @@
                 </tbody></table>
               </div>
               <!-- /.card-body -->
+                            <div class="card-footer">
+                <pagination :data="vendors" @pagination-change-page="getResults"></pagination>
+              </div>
             </div>
             </div>
         </div>
@@ -134,6 +136,11 @@ export default {
     };
   },
   methods: {
+    getResults(page = 1) {
+      axios.get("api/vendor?page=" + page).then(response => {
+        this.vendors = response.data;
+      });
+    },
     newModel() {
       this.editmode = false;
       this.form.reset();
@@ -142,7 +149,7 @@ export default {
     },
     /*==============LOADING VENDOR==============*/
     loadVendors() {
-      axios.get("api/vendor").then(({ data }) => (this.vendors = data.data));
+      axios.get("api/vendor").then(({ data }) => (this.vendors = data));
     },
     /*==============END LOADING VENDOR==============*/
 
@@ -234,6 +241,15 @@ export default {
   },
 
   mounted() {
+    Fire.$on("searching", () => {
+      let query = this.$parent.search;
+      axios
+        .get("api/findVendor?q=" + query)
+        .then(data => {
+          this.vendors = data.data;
+        })
+        .catch();
+    });
     this.loadVendors();
     Fire.$on("RefreshTable", () => {
       this.loadVendors();

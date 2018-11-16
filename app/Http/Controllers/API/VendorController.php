@@ -29,7 +29,7 @@ class VendorController extends Controller
      */
     public function index()
     {
-        $vendor = Vendor::paginate(20);
+        $vendor = Vendor::paginate(10);
 
         return $vendor;
     }
@@ -105,5 +105,26 @@ class VendorController extends Controller
         $vendor->delete();
 
         return['message', 'Vendor Deleted'];
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function searchVendors()
+    {
+        if($search = \Request::get('q')){
+            $vendors = Vendor::where(function($query) use ($search){
+                $query->where('vendor_company_name','LIKE',"%$search%")
+                      ->orWhere('vendor_email','LIKE',"%$search%")
+                      ->orWhere('vendor_person_name','LIKE',"%$search%");
+                      
+            })->paginate(10);
+        }else{
+            return Vendor::paginate(10);
+        }
+        return $vendors;
     }
 }
