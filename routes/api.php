@@ -35,29 +35,25 @@ Route::apiResources([
     'vendor' => 'API\VendorController'
 ]);
 Route::get('findVendor', 'API\VendorController@searchVendors');
+Route::get('selectVendor', 'API\VendorController@vendor');
 
 /*============ CUSTOMER ROUTES ============*/
 Route::apiResources([
     'customer' => 'API\CustomerController'
-    ]);
-    Route::get('findCustomer', 'API\CustomerController@searchCustomers');
-    
-    /*============ VENDOR TICKET INVOICE ROUTES ============*/
+]);
+Route::get('findCustomer', 'API\CustomerController@searchCustomers');
+Route::get('selectCustomer', 'API\CustomerController@customer');
+
+/*============ VENDOR TICKET INVOICE ROUTES ============*/
 Route::apiResources([
     'ticket-invoice' => 'API\TicketInvoiceController'
 ]);
+
 Route::get('ticket-invoice/fetch/{ticket_invoice}', 'API\TicketInvoiceController@fetch')->name('ticket-invoice.fetch');
 Route::get('findVTI', 'API\TicketInvoiceController@searchVTI');
+Route::get('selectVTI', 'API\TicketInvoiceController@selectVTI');
 
 /*============ CUSTOMER TICKET INVOICE ROUTES ============*/
 Route::apiResources([
     'ct-invoice' => 'API\CtInvoiceController'
 ]);
-
-Route::get('/search', function(){
-    $queryString = Input::get('queryString');
-
-    $vendors = Vendor::where('vendor_company_name', 'LIKE', '%'.$queryString.'%')->get();
-
-    return response()->json($vendors);
-});

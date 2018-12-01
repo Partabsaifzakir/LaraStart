@@ -17,8 +17,13 @@
 .tfoot {
   border: none;
 }
-</style>
 
+.datalist {
+   overflow-y:auto !important;
+   height: 50px !important;
+   overflow:scroll !important;
+}
+</style>
 <template>
     <div class="container mt-4">
         <div class="row justify-content-center">
@@ -84,7 +89,7 @@
             <form @submit.prevent="editmode ? updateTicketInvoice() : createTicketInvoice()">
             <div class="modal-body">
               <div class="row">
-                
+
                 <div class="col-sm-2">
                   <div class="form-group">
                     <label for="ticket_invoice_no" class="control-label">Invoice No.</label>
@@ -92,15 +97,15 @@
                     <has-error :form="form" field="ticket_invoice_no"></has-error>
                   </div>
                 </div>
-
+                
                 <div class="col-sm-2">
                   <div class="form-group">
-
                     <label for="vendor">Select Vendor</label>
-                    <select id="vendor_id" name="vendor_id" v-model="form.vendor_id" type="text" class="form-control" :class="{ 'is-invalid': form.errors.has('vendor_id')}">
+                    <input class="form-control" type="text" list="a" v-model="form.vendor_id">
+                    <datalist class="datalist" id="a">
                       <option disabled selected>Please Select Vendor</option>
-                      <option v-for="vendor in vendors" :key="vendor.id" :value="vendor.id">{{ vendor.vendor_company_name }}</option>
-                    </select>
+                      <option v-for="vendor in selectVendors" :key="vendor.id" :value="vendor.id">{{ vendor.vendor_company_name }}</option>
+                    </datalist>
                       <has-error :form="form" field="vendor_id"></has-error>
                   </div>
                 </div>
@@ -113,6 +118,7 @@
                   <has-error :form="form" field="ticket_invoice_date"></has-error>
                   </div>
                 </div>
+
               </div>
               <hr>
               <div class="row">
@@ -315,8 +321,8 @@
         </div>
       </div> 
     </div>
+    
 </template>
-
 <script>
 export default {
   data() {
@@ -324,6 +330,7 @@ export default {
       editmode: true,
       ticketInvoices: {},
       vendors: null,
+      selectVendors: null,
       form: new Form({
         id: "",
         vendor_id: "",
@@ -377,6 +384,9 @@ export default {
     };
   },
   methods: {
+        updateDate: function(date) {
+      this.date = date;
+    },
     getResults(page = 1) {
       axios.get("api/ticket-invoice?page=" + page).then(response => {
         this.ticketInvoices = response.data;
@@ -603,6 +613,13 @@ export default {
     loadVendors() {
       axios.get("api/vendor").then(({ data }) => (this.vendors = data.data));
     },
+
+    loadSelectVendor() {
+      axios
+        .get("api/selectVendor")
+        .then(({ data }) => (this.selectVendors = data));
+    },
+
     /*=================END LOAD VENDORS CODE=================*/
 
     /*=================CREATE TICKET INVOICE CODE=================*/
@@ -693,7 +710,6 @@ export default {
     }
   },
   /*=================OPEN NEW MODEL CODE=================*/
-
   mounted() {
     Fire.$on("searching", () => {
       let query = this.$parent.search;
@@ -711,6 +727,10 @@ export default {
     this.loadVendors();
     Fire.$on("RefreshTable", () => {
       this.loadVendors();
+    });
+    this.loadSelectVendor();
+    Fire.$on("RefreshTable", () => {
+      this.loadSelectVendor();
     });
   }
 };

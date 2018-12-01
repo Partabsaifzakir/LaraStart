@@ -208,4 +208,15 @@ class TicketInvoiceController extends Controller
         }
         return $VTI;
     }
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function selectVTI()
+    {
+        $selectVTI = TicketInvoice::all();
+
+        return $selectVTI;
+    }
 }

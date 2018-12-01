@@ -125,4 +125,15 @@ class CustomerController extends Controller
         }
         return $customers;
     }
+            /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function customer()
+    {
+        $selectCustomers = Customer::all();
+
+        return $selectCustomers;
+    }
 }

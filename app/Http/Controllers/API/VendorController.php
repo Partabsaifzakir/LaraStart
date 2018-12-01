@@ -12,17 +12,6 @@ use Gate;
 class VendorController extends Controller
 {
     /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        $this->middleware('auth:api');
-
-    }
-
-    /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
@@ -33,7 +22,6 @@ class VendorController extends Controller
 
         return $vendor;
     }
-
     /**
      * Store a newly created resource in storage.
      *
@@ -122,9 +110,18 @@ class VendorController extends Controller
                       ->orWhere('vendor_person_name','LIKE',"%$search%");
                       
             })->paginate(10);
-        }else{
-            return Vendor::paginate(10);
         }
         return $vendors;
+    }
+        /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function vendor()
+    {
+        $selectVendors = Vendor::all();
+
+        return $selectVendors;
     }
 }

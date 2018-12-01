@@ -92,7 +92,7 @@
                   <div class="form-group">
                     <label for="ticket_invoice_no">Select Vendor Invoice</label>
                     <select id="ticket_invoice_no" v-model="selectedTicketInvoiceId" @change="getRecord" name="ticket_invoice_no" type="text" class="form-control" :class="{ 'is-invalid': form.errors.has('ticket_invoice_no')}">
-                      <option v-for="ticketInvoice in ticketInvoices" :key="ticketInvoice.id" :value="ticketInvoice.id">{{ ticketInvoice.ticket_invoice_no }}</option>
+                      <option v-for="ticketInvoice in selectVTI" :key="ticketInvoice.id" :value="ticketInvoice.id">{{ ticketInvoice.ticket_invoice_no }}</option>
                     </select>
                       <has-error :form="form" field="ticket_invoice_no"></has-error>
                   </div>
@@ -110,12 +110,11 @@
                 <!-- =====CUSTOMER SELECTION===== -->
                 <div class="col-sm-2">
                   <div class="form-group">
-
                     <label for="customer">Select Customer</label>
-                    <select id="customer_id" name="customer_id" v-model="form.customer_id" type="text" class="form-control" :class="{ 'is-invalid': form.errors.has('customer_id')}">
-                      <option disabled selected>Please Select Customer</option>
-                      <option v-for="customer in customers" :key="customer.id" :value="customer.id">{{ customer.customer_name }}</option>
-                    </select>
+                    <input class="form-control" type="text" list="a" v-model="form.customer_id">
+                    <datalist class="datalist" id="a">
+                      <option v-for="customer in selectCustomers" :key="customer.id" :value="customer.id">{{ customer.customer_name }}</option>
+                    </datalist>
                       <has-error :form="form" field="customer_id"></has-error>
                   </div>
                 </div>
@@ -353,12 +352,12 @@
 export default {
   data() {
     return {
+      selectVTI: null,
       editmode: true,
-      selectedTicketInvoiceId: false,
-      viewInvoice: false,
-      ticketInvoices: {},
       ctInvoices: {},
       customers: null,
+      selectedTicketInvoiceId: false,
+      selectCustomers: null,
       form: new Form({
         id: "",
         customer_id: "",
@@ -414,7 +413,7 @@ export default {
   },
   methods: {
     getResults(page = 1) {
-      axios.get('api/ct-invoice?page=' + page).then(response => {
+      axios.get("api/ct-invoice?page=" + page).then(response => {
         this.ctInvoices = response.data;
       });
     },
@@ -562,11 +561,6 @@ export default {
 
       return calCtTaxOADTotal;
     },
-    loadTicketInvoices() {
-      axios
-        .get("api/ticket-invoice")
-        .then(({ data }) => (this.ticketInvoices = data.data));
-    },
     getRecord: function(e) {
       axios
         .get("api/ticket-invoice/fetch/" + this.selectedTicketInvoiceId)
@@ -645,6 +639,9 @@ export default {
     loadCtInvoices() {
       axios.get("api/ct-invoice").then(({ data }) => (this.ctInvoices = data));
     },
+    loadVtInvoices() {
+      axios.get("api/selectVTI").then(({ data }) => (this.selectVTI = data));
+    },
     /*=================END LOAD TICKET INVOICE CODE=================*/
 
     /*=================LOAD VENDORS CODE=================*/
@@ -652,6 +649,12 @@ export default {
       axios
         .get("api/customer")
         .then(({ data }) => (this.customers = data.data));
+    },
+
+    loadSelectCustomer() {
+      axios
+        .get("api/selectCustomer")
+        .then(({ data }) => (this.selectCustomers = data));
     },
     /*=================END LOAD VENDORS CODE=================*/
 
@@ -744,10 +747,6 @@ export default {
   /*=================OPEN NEW MODEL CODE=================*/
 
   mounted() {
-    this.loadTicketInvoices();
-    Fire.$on("RefreshTable", () => {
-      this.loadTicketInvoices();
-    });
     this.loadCtInvoices();
     Fire.$on("RefreshTable", () => {
       this.loadCtInvoices();
@@ -755,6 +754,14 @@ export default {
     this.loadCustomers();
     Fire.$on("RefreshTable", () => {
       this.loadCustomers();
+    });
+    this.loadSelectCustomer();
+    Fire.$on("RefreshTable", () => {
+      this.loadSelectCustomer();
+    });
+        this.loadVtInvoices();
+    Fire.$on("RefreshTable", () => {
+      this.loadSelectVTI();
     });
   }
 };

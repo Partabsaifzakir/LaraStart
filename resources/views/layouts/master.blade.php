@@ -6,6 +6,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
 -->
 <html lang="en">
 <head>
+
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
@@ -13,8 +14,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
   <meta name="csrf-token" content="{{ csrf_token() }}">
 
   <title>AdminLTE 3 | Starter</title>
-
-  <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="{{asset('/css/app.css')}}">
+  
   {{-- <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
   <!-- Theme style -->
@@ -154,7 +155,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
     <a href="index3.html" class="brand-link">
       {{-- <img src="./img/man.png" alt="AliTravel Logo" class="brand-image img-circle elevation-3"
            style="opacity: .8"> --}}
-      <span class="brand-text font-weight-light"><img src="./img/logo.png" alt="AliTravel Logo" 
+      <span class="brand-text font-weight-light"><img src="{{asset('./img/logo.png')}}" alt="AliTravel Logo" 
         style="width: 100%;"></span>
     </a>
 
@@ -163,7 +164,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
       <!-- Sidebar user panel (optional) -->
       <div class="user-panel mt-3 pb-3 mb-3 d-flex">
         <div class="image">
-          <img src="./img/avatar-512.png" class="img-circle elevation-2" alt="User Image">
+        <img src="{{asset('img/profile')}}/{{Auth::user()->photo}}" class="img-circle elevation-2" alt="User Image">
         </div>
         <div class="info">
         <a href="#" class="d-block">{{ Auth::user()->name }}</a>
@@ -211,9 +212,9 @@ scratch. This page gets rid of all links and provides the needed markup only.
           </li>
           <li class="nav-item has-treeview">
             <a href="#" class="nav-link">
-              <i class="fab fa-wpforms nav-icon text-teal"></i>
+              <i class="fa fa-plane-departure nav-icon text-teal"></i>
               <p>
-                Ticketing Invoice
+                Ticket Invoice
                 <i class="right fa fa-angle-left"></i>
               </p>
             </a>
@@ -221,14 +222,39 @@ scratch. This page gets rid of all links and provides the needed markup only.
             <ul class="nav nav-treeview">
               <li class="nav-item">
                 <router-link to="/ticket-invoices" class="nav-link">
-                  <i class="fas fa-paste nav-icon text-red"></i>
+                  <i class="fas fa-file-invoice-dollar nav-icon text-red"></i>
                   <p>Vendor Invoice</p>
                 </router-link>
               </li>
               
               <li class="nav-item">
                 <router-link to="/ct-invoices" class="nav-link">
-                  <i class="fas fa-paste nav-icon text-green"></i>
+                  <i class="fas fa-file-invoice-dollar nav-icon text-green"></i>
+                  <p>Customer Invoice</p>
+                </router-link>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-item has-treeview">
+            <a href="#" class="nav-link">
+              <i class="fas fa-home nav-icon text-teal"></i>
+              <p>
+                Hotel Invoice
+                <i class="right fa fa-angle-left"></i>
+              </p>
+            </a>
+
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <router-link to="/vh-invoices" class="nav-link">
+                  <i class="fas fa-file-invoice-dollar nav-icon text-red"></i>
+                  <p>Vendor Invoice</p>
+                </router-link>
+              </li>
+              
+              <li class="nav-item">
+                <router-link to="/ct-invoices" class="nav-link">
+                  <i class="fas fa-file-invoice-dollar nav-icon text-green"></i>
                   <p>Customer Invoice</p>
                 </router-link>
               </li>
@@ -351,7 +377,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
   <!-- /.control-sidebar -->
 
   <!-- Main Footer -->
-  <footer class="main-footer">
+  <footer class="main-footer noScreen">
     <!-- To the right -->
     <div class="float-right d-none d-sm-inline">
       Anything you want
@@ -369,8 +395,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
       window.user = @json(auth()->user())
     </script>
 @endauth
-
-<script src="/js/app.js"></script>
+  
+<script src="{{asset('/js/app.js')}}"></script>
 
 {{-- <!-- jQuery -->
 <script src="plugins/jquery/jquery.min.js"></script>

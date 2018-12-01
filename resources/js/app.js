@@ -13,7 +13,18 @@ window.Vue = require('vue');
 import Gate from './Gate';
 Vue.prototype.$gate = new Gate(window.user);
 /*==========END AUTHENTICATE GATE CODE==========*/
+var converter = require('number-to-words');
 
+Vue.filter('toWords', function (value) {
+  if (!value) return '';
+  return converter.toWords(value);
+})
+
+Vue.filter('capitalize', function (value) {
+    if (!value) return ''
+    value = value.toString()
+    return value.charAt(0).toUpperCase() + value.slice(1)
+  })
 /*==========AUTHENTICATE GATE CODE==========*/
 Vue.filter('toMoney', function (value) {
     if (!value) return '$0.00'
@@ -27,7 +38,6 @@ Vue.filter('toMoney', function (value) {
     return  formatter.format(value); 
   });
 /*==========END AUTHENTICATE GATE CODE==========*/
-
 
 /*==========MOMENT CODE==========*/
 import moment from 'moment';
@@ -57,6 +67,9 @@ const toast = swal.mixin({
 window.toast = toast;
 /*==========END TOAST CODE==========*/
 
+import VueSingleSelect from "vue-single-select";
+Vue.component('vue-single-select', VueSingleSelect)
+
 /*==========V-FORM VALIDATION CODE==========*/
 import { Form, HasError, AlertError } from 'vform'
 
@@ -72,9 +85,14 @@ import VueProgressBar from 'vue-progressbar'
 Vue.use(VueProgressBar, {
     color: 'rgb(143, 255, 199)',
     failedColor: 'red',
-    height: '5px'
+    height: '15px'
   })
 /*==========END PROGRESS BAR CODE==========*/
+ 
+import Vue from 'vue'
+
+import vSelect from 'vue-select'
+Vue.component('v-select', vSelect)
 
 /*==========VUE ROUTER CODE==========*/
 import VueRouter from 'vue-router'
@@ -92,6 +110,7 @@ let routes = [
     { path: '/ticket-invoices', component: require('./components/TicketInvoice/VendorTicketInvoice.vue') },
     { path: '/ct-invoices', component: require('./components/TicketInvoice/CustomerTicketInvoice.vue') },
     { name: 'ctInvoiceView', path:'/ct-invoice-view/:id', component:('ctInvoiceView', require('./components/TicketInvoice/CtInvoiceView.vue')) },
+    { path: '/vh-invoices', component: require('./components/HotelInvoice/VendorHotelInvoice.vue') },
 ]
 /*==========END ALL VUE COMPONENTS CODE==========*/
 
@@ -139,6 +158,9 @@ Vue.component(
 );
 /*==========END ALL SVG COMPONENTS CODE==========*/
 
+/*==========END ALL SVG COMPONENTS CODE==========*/
+/*==========END ALL SVG COMPONENTS CODE==========*/
+
 Vue.component('example-component', require('./components/ExampleComponent.vue'));
 
 const app = new Vue({
@@ -151,5 +173,5 @@ const app = new Vue({
         searchit: _.debounce(() => {
             Fire.$emit('searching')
         }, 500)
-    }
+    },
 });
