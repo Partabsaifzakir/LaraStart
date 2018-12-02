@@ -110,7 +110,17 @@ let routes = [
     { path: '/ticket-invoices', component: require('./components/TicketInvoice/VendorTicketInvoice.vue') },
     { path: '/ct-invoices', component: require('./components/TicketInvoice/CustomerTicketInvoice.vue') },
     { name: 'ctInvoiceView', path:'/ct-invoice-view/:id', component:('ctInvoiceView', require('./components/TicketInvoice/CtInvoiceView.vue')) },
+    { name: 'ticketInvoiceView', path:'/ticket-invoice-view/:id', component:('ticketInvoiceView', require('./components/TicketInvoice/TicketInvoiceView.vue')) },
+    
     { path: '/vh-invoices', component: require('./components/HotelInvoice/VendorHotelInvoice.vue') },
+    { path: '/ch-invoices', component: require('./components/HotelInvoice/CustomerHotelInvoice.vue') },
+    { name: 'chInvoiceView', path:'/ch-invoice-view/:id', component:('chInvoiceView', require('./components/HotelInvoice/ChInvoiceView.vue')) },
+    { name: 'vhInvoiceView', path:'/vh-invoice-view/:id', component:('vhInvoiceView', require('./components/HotelInvoice/VhInvoiceView.vue')) },
+    
+    { path: '/vv-invoices', component: require('./components/VisaInvoice/VendorVisaInvoice.vue') },
+    { path: '/cv-invoices', component: require('./components/VisaInvoice/CustomerVisaInvoice.vue') },
+    { name: 'vvInvoiceView', path:'/vv-invoice-view/:id', component:('vvInvoiceView', require('./components/VisaInvoice/VvInvoiceView.vue')) },
+    { name: 'cvInvoiceView', path:'/cv-invoice-view/:id', component:('cvInvoiceView', require('./components/VisaInvoice/CvInvoiceView.vue')) }
 ]
 /*==========END ALL VUE COMPONENTS CODE==========*/
 

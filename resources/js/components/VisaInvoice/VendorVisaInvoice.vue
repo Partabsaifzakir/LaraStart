@@ -34,7 +34,7 @@ body {
       <div class="col-md-12">
         <div class="card">
           <div class="card-header">
-            <h3 class="card-title">Hotel Invoice Table</h3>
+            <h3 class="card-title">Vendor Visa Invoice Table</h3>
 
             <div class="card-tools">
               <button class="btn btn-default" style="background-color: transparent;" @click="newModel">
@@ -54,13 +54,13 @@ body {
                   <th>Modify</th>
                 </tr>
 
-                <tr v-for="vhInvoice in vhInvoices.data" :key="vhInvoice.id">
-                    <td>{{ vhInvoice.vh_invoice_no }}</td>
-                    <td>{{ vhInvoice.vendor.vendor_company_name }}</td>
-                    <td>{{ vhInvoice.vh_invoice_date | myDate}}</td>
-                    <td>{{ formatPrice(vhInvoice.vh_invoice_grand_total) }}</td>
+                <tr v-for="vvInvoice in vvInvoices.data" :key="vvInvoice.id">
+                    <td>{{ vvInvoice.vv_invoice_no }}</td>
+                    <td>{{ vvInvoice.vendor.vendor_company_name }}</td>
+                    <td>{{ vvInvoice.vv_invoice_date | myDate}}</td>
+                    <td>{{ formatPrice(vvInvoice.vv_invoice_grand_total) }}</td>
                   <td>
-                    <a href="#" @click="editModel(vhInvoice)">
+                    <a href="#" @click="editModel(vvInvoice)">
                       <i class="fas fa-edit fa-lg text-orange"></i>
                     </a>
                     &nbsp;
@@ -68,7 +68,7 @@ body {
                       <i class="fas fa-times fa-lg text-red"></i>
                     </a>
                     &nbsp;
-                    <router-link v-bind:to="{name: 'vhInvoiceView', params: {id: vhInvoice.id}}">
+                    <router-link v-bind:to="{name: 'vvInvoiceView', params: {id: vvInvoice.id}}">
                         <i class="fas fa-eye fa-lg text-blue"></i>
                     </router-link>
                   </td>
@@ -78,32 +78,32 @@ body {
           </div>
           <!-- /.card-body -->
           <div class="card-footer">
-              <pagination :data="vhInvoices" @pagination-change-page="getResults"></pagination>
+              <pagination :data="vvInvoices" @pagination-change-page="getResults"></pagination>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="modal fade" id="addNewVhInvoice" tabindex="-1" role="dialog" aria-labelledby="addNewVhInvoiceTitle" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal fade" id="addNewVvInvoice" tabindex="-1" role="dialog" aria-labelledby="addNewVvInvoiceTitle" aria-hidden="true" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog modal-dialog-centered modal-full float-sm-right" role="document">
             <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" v-show="!editmode" id="addNewVhInvoiceTitle">Add Vendor Hotel Invoice</h5>
-                <h5 class="modal-title" v-show="editmode" id="updateVhInvoiceTitle">Update Vendor Hotel Invoice</h5>
+                <h5 class="modal-title" v-show="!editmode" id="addNewVvInvoiceTitle">Add Vendor Hotel Invoice</h5>
+                <h5 class="modal-title" v-show="editmode" id="updateVvInvoiceTitle">Update Vendor Hotel Invoice</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             
-            <form @submit.prevent="editmode ? updateVhInvoice() : createVhInvoice()">
+            <form @submit.prevent="editmode ? updateVvInvoice() : createVvInvoice()">
             <div class="modal-body">
               <div class="row">
 
                 <div class="col-sm-2">
                   <div class="form-group">
-                    <label for="vh_invoice_no" class="control-label">Invoice No.</label>
-                    <input v-model="form.vh_invoice_no" type="text" name="vh_invoice_no" class="form-control" :class="{ 'is-invalid': form.errors.has('vh_invoice_no') }">
-                    <has-error :form="form" field="vh_invoice_no"></has-error>
+                    <label for="vv_invoice_no" class="control-label">Invoice No.</label>
+                    <input size="500" v-model="form.vv_invoice_no" type="text" name="vv_invoice_no" class="form-control" :class="{ 'is-invalid': form.errors.has('vv_invoice_no') }">
+                    <has-error :form="form" field="vv_invoice_no"></has-error>
                   </div>
                 </div>
                 
@@ -121,10 +121,10 @@ body {
 
                 <div class="col-sm-2">
                   <div class="form-group">
-                  <label for="vh_invoice_date">Invoice Date</label>
-                  <input v-model="form.vh_invoice_date" type="date" name="vh_invoice_date" placeholder=""
-                    class="form-control" :class="{ 'is-invalid': form.errors.has('vh_invoice_date') }">
-                  <has-error :form="form" field="vh_invoice_date"></has-error>
+                  <label for="vv_invoice_date">Invoice Date</label>
+                  <input v-model="form.vv_invoice_date" type="date" name="vv_invoice_date" placeholder=""
+                    class="form-control" :class="{ 'is-invalid': form.errors.has('vv_invoice_date') }">
+                  <has-error :form="form" field="vv_invoice_date"></has-error>
                   </div>
                 </div>
 
@@ -134,6 +134,7 @@ body {
               <table class="table-form table table-bordered table-responsive-md table-striped text-center">
                 <thead>
                   <tr>
+                    <th>Passenger Name</th>
                     <th>Description</th>
                     <th>Fares</th>
                     <th>Total</th>
@@ -143,23 +144,27 @@ body {
                 </thead>
                 
                 <tbody>
-                  <tr v-for="(vhInvoiceItem, key) in form.vhInvoiceItems" :key="key">
+                  <tr v-for="(vvInvoiceItem, key) in form.vvInvoiceItems" :key="key">
                       <!--Description-->
                     <td>
-                      <textarea cols="100" rows="5" v-model="vhInvoiceItem.vh_description" type="text" name="vh_description" class="table-control form-control" :class="{ 'is-invalid': form.errors.has('vh_description') }"></textarea>
-                      <has-error :form="form" field="vh_description"></has-error>
+                      <input size="30" v-model="vvInvoiceItem.vv_passenger_name" type="text" name="vv_passenger_name" class="table-control form-control" :class="{ 'is-invalid': form.errors.has('vv_passenger_name') }">
+                      <has-error :form="form" field="vv_passenger_name"></has-error>
+                    </td>
+                    <td>
+                      <input size="80" v-model="vvInvoiceItem.vv_description" type="text" name="vv_description" class="table-control form-control" :class="{ 'is-invalid': form.errors.has('vv_description') }">
+                      <has-error :form="form" field="vv_description"></has-error>
                     </td>
                       <!--Fares-->
                     <td>
-                      <input v-model.number="vhInvoiceItem.vh_fares" type="number" name="vh_fares"
-                      class="table-control form-control" :class="{ 'is-invalid': form.errors.has('vh_fares') }">
-                      <has-error :form="form" field="vh_fares"></has-error>
+                      <input v-model.number="vvInvoiceItem.vv_fares" type="number" name="vv_fares"
+                      class="table-control form-control" :class="{ 'is-invalid': form.errors.has('vv_fares') }">
+                      <has-error :form="form" field="vv_fares"></has-error>
                     </td>
                     <!--Sub Total -->
                     <td>
-                      <input :value="getSubTotal(key)" type="number" readonly name="vh_sub_total"
-                      class="table-control form-control" :class="{ 'is-invalid': form.errors.has('vh_sub_total') }">
-                      <has-error :form="form" field="vh_sub_total"></has-error>
+                      <input :value="getSubTotal(key)" type="number" readonly name="vv_sub_total"
+                      class="table-control form-control" :class="{ 'is-invalid': form.errors.has('vv_sub_total') }">
+                      <has-error :form="form" field="vv_sub_total"></has-error>
                     </td>
                     <!--Remove Button-->
                     <td>
@@ -172,17 +177,17 @@ body {
                 <tfoot class="tfoot">
 
                     <tr>
-                    <td  id="borderless" class="table-empty" colspan="1"><strong></strong></td> 
+                    <td  id="borderless" class="table-empty" colspan="2"><strong></strong></td> 
                     <td  id="fillcolor" class="table-label" colspan="1"><strong>Fares</strong></td>
                     <td  class="table-amount">
-                      <input :value="getFareTotal()" type="text" readonly name="vh_invoice_fares_total" class="form-control" :class="{ 'is-invalid': form.errors.has('vh_invoice_fares_total') }"></td> 
+                      <input :value="getFareTotal()" type="text" readonly name="vv_invoice_fares_total" class="form-control" :class="{ 'is-invalid': form.errors.has('vv_invoice_fares_total') }"></td> 
                     </tr>
 
                     <tr>
-                    <td  id="borderless" class="table-empty" colspan="1"><strong></strong></td> 
+                    <td  id="borderless" class="table-empty" colspan="2"><strong></strong></td> 
                     <td  id="fillcolor" class="table-label" colspan="1"><strong>Total</strong></td>
                     <td  class="table-amount">
-                      <input :value="getGrandTotal()" type="text" readonly name="vh_invoice_grand_total" class="form-control" :class="{ 'is-invalid': form.errors.has('vh_invoice_grand_total') }"></td> 
+                      <input :value="getGrandTotal()" type="text" readonly name="vv_invoice_grand_total" class="form-control" :class="{ 'is-invalid': form.errors.has('vv_invoice_grand_total') }"></td> 
                     </tr>
 
                 </tfoot>
@@ -211,24 +216,25 @@ export default {
   data() {
     return {
       editmode: true,
-      vhInvoices: {},
+      vvInvoices: {},
       vendors: null,
       selectVendors: null,
       form: new Form({
         id: "",
         vendor_id: "",
-        vh_invoice_no: "",
-        vh_invoice_date: "",
-        vh_invoice_fares_total: 0,
-        vh_invoice_grand_total: 0,
+        vv_invoice_no: "",
+        vv_invoice_date: "",
+        vv_invoice_fares_total: 0,
+        vv_invoice_grand_total: 0,
 
-        vhInvoiceItems: [
+        vvInvoiceItems: [
           {
             id: "",
-            vh_invoice_id: "",
-            vh_description:"",
-            vh_fares: 0,
-            vh_sub_total: 0
+            vv_invoice_id: "",
+            vv_passenger_name: "",
+            vv_description:"",
+            vv_fares: 0,
+            vv_sub_total: 0
           }
         ]
       })
@@ -236,15 +242,15 @@ export default {
   },
   methods: {
         getResults(page = 1) {
-      axios.get("api/vh-invoice?page=" + page).then(response => {
-        this.vhInvoices = response.data;
+      axios.get("api/vv-invoice?page=" + page).then(response => {
+        this.vvInvoices = response.data;
       });
     },
           /*=================LOAD TICKET INVOICE CODE=================*/
-    loadVhInvoices() {
+    loadVvInvoices() {
       axios
-        .get("api/vh-invoice")
-        .then(({ data }) => (this.vhInvoices = data));
+        .get("api/vv-invoice")
+        .then(({ data }) => (this.vvInvoices = data));
     },
     /*=================END LOAD TICKET INVOICE CODE=================*/
 
@@ -263,7 +269,7 @@ export default {
       this.editmode = false;
       this.form.reset();
       this.form.clear();
-      $("#addNewVhInvoice").modal("show");
+      $("#addNewVvInvoice").modal("show");
     },
         /*=================FORMAT MONEY CODE=================*/
     formatPrice(value) {
@@ -273,35 +279,35 @@ export default {
 
     /*=================END FORMAT MONEY CODE=================*/
       /*==============EDIT INVOICE CODE==============*/
-    editModel(vhInvoice) {
+    editModel(vvInvoice) {
       this.editmode = true;
       this.form.reset();
       this.form.clear();
-      $("#addNewVhInvoice").modal("show");
-      //  console.log("edit  => ",vhInvoice)
-      this.form.fill(vhInvoice);
+      $("#addNewVvInvoice").modal("show");
+      //  console.log("edit  => ",vvInvoice)
+      this.form.fill(vvInvoice);
 
-      this.form.vhInvoiceItems = vhInvoice.vh_invoice_items;
+      this.form.vvInvoiceItems = vvInvoice.vv_invoice_items;
 
       // console.log("after fill  => ",this.form)
     },
     /*==============END EDIT INVOICE CODE==============*/
         /*=================ADD ITEMS FIELDS CODE=================*/
     addItems(key) {
-      this.form.vhInvoiceItems.splice(key + 1, 0, {
+      this.form.vvInvoiceItems.splice(key + 1, 0, {
         id: "",
-        vh_invoice_id: "",
-        vh_description: "",
-        vh_fares: 0,
-        vh_sub_total: 0
+        vv_invoice_id: "",
+        vv_description: "",
+        vv_fares: 0,
+        vv_sub_total: 0
       });
     },
     /*=================END ADD ITEMS FIELDS CODE=================*/
         getSubTotal(key) {
       let calSubTotal =
-        parseInt(this.form.vhInvoiceItems[key].vh_fares);
+        parseInt(this.form.vvInvoiceItems[key].vv_fares);
 
-      this.form.vhInvoiceItems[key].vh_sub_total = calSubTotal;
+      this.form.vvInvoiceItems[key].vv_sub_total = calSubTotal;
 
       return calSubTotal;
     },
@@ -311,37 +317,37 @@ export default {
       // console.log("1 => ", this.form);
       // console.log("2 =>", this.form.ticketInvoiceItems);//this puts  undefined why ?
 
-      Object.values(this.form.vhInvoiceItems).forEach(
-        i => (calFareTotal += parseFloat(i.vh_fares))
+      Object.values(this.form.vvInvoiceItems).forEach(
+        i => (calFareTotal += parseFloat(i.vv_fares))
       );
 
-      this.form.vh_invoice_fares_total = calFareTotal;
+      this.form.vv_invoice_fares_total = calFareTotal;
 
       return calFareTotal;
     },
         /*=================REMOVE ITEMS FIELDS CODE=================*/
     removeItems(key) {
-      this.form.vhInvoiceItems.splice(key, 1);
+      this.form.vvInvoiceItems.splice(key, 1);
     },
     /*=================END REMOVE ITEMS FIELDS CODE=================*/
         getGrandTotal() {
       let calGrandTotal = 0;
 
       calGrandTotal =
-        parseInt(this.form.vh_invoice_fares_total);
+        parseInt(this.form.vv_invoice_fares_total);
 
-      this.form.vh_invoice_grand_total = calGrandTotal;
+      this.form.vv_invoice_grand_total = calGrandTotal;
 
       return calGrandTotal;
     },
         /*=================CREATE TICKET INVOICE CODE=================*/
-    createVhInvoice() {
+    createVvInvoice() {
       this.$Progress.start();
       this.form
-        .post("api/vh-invoice")
+        .post("api/vv-invoice")
         .then(() => {
           Fire.$emit("RefreshTable");
-          $("#addNewVhInvoice").modal("hide");
+          $("#addNewVvInvoice").modal("hide");
           toast({
             type: "success",
             title: "Hotel Invoice Created Successfully"
@@ -359,18 +365,18 @@ export default {
         Fire.$on("searching", () => {
       let query = this.$parent.search;
       axios
-        .get("api/findVHI?q=" + query)
+        .get("api/findVVI?q=" + query)
         .then(data => {
-          this.vhInvoices = data.data;
+          this.vvInvoices = data.data;
         })
         .catch();
     });
 
     console.log("Component mounted.");
 
-    this.loadVhInvoices();
+    this.loadVvInvoices();
     Fire.$on("RefreshTable", () => {
-    this.loadVhInvoices();
+    this.loadVvInvoices();
     });
 
     this.loadVendors();

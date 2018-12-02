@@ -237,7 +237,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
           </li>
           <li class="nav-item has-treeview">
             <a href="#" class="nav-link">
-              <i class="fas fa-home nav-icon text-teal"></i>
+              <i class="fas fa-hotel nav-icon text-orange"></i>
               <p>
                 Hotel Invoice
                 <i class="right fa fa-angle-left"></i>
@@ -253,7 +253,32 @@ scratch. This page gets rid of all links and provides the needed markup only.
               </li>
               
               <li class="nav-item">
-                <router-link to="/ct-invoices" class="nav-link">
+                <router-link to="/ch-invoices" class="nav-link">
+                  <i class="fas fa-file-invoice-dollar nav-icon text-green"></i>
+                  <p>Customer Invoice</p>
+                </router-link>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-item has-treeview">
+            <a href="#" class="nav-link">
+              <i class="fab fa-cc-visa nav-icon text-green-yellow"></i>
+              <p>
+                Visa Invoice
+                <i class="right fa fa-angle-left"></i>
+              </p>
+            </a>
+
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <router-link to="/vv-invoices" class="nav-link">
+                  <i class="fas fa-file-invoice-dollar nav-icon text-red"></i>
+                  <p>Vendor Invoice</p>
+                </router-link>
+              </li>
+              
+              <li class="nav-item">
+                <router-link to="/cv-invoices" class="nav-link">
                   <i class="fas fa-file-invoice-dollar nav-icon text-green"></i>
                   <p>Customer Invoice</p>
                 </router-link>

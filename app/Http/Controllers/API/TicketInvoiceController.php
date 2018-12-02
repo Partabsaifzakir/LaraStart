@@ -98,7 +98,7 @@ class TicketInvoiceController extends Controller
      */
     public function show($id)
     {
-        //
+        return TicketInvoice::findOrFail($id);
     }
 
     /**

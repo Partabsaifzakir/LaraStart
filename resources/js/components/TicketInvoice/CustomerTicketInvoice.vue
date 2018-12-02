@@ -28,7 +28,7 @@
 
                 <div class="card-tools">
                     <a class="btn btn-default" style="background-color: transparent;" @click="newModel">
-                        <i class="fas fa-user-plus fa-2x text-green"></i>
+                        <i class="fas fa-plus fa-2x text-green"></i>
                     </a>       
                 </div>
               </div>
@@ -51,11 +51,11 @@
                     <td>{{ formatPrice(ctInvoice.ct_invoice_grand_total) }}</td>
                     <td>
                         <a href="#" @click="editModel(ctInvoice)">
-                            <i class="fas fa-user-edit fa-lg text-orange"></i>
+                            <i class="fas fa-edit fa-lg text-orange"></i>
                         </a>
                         &nbsp;
                         <a href="#">
-                            <i class="fas fa-user-times fa-lg text-red"></i>
+                            <i class="fas fa-times fa-lg text-red"></i>
                         </a>
                         &nbsp;
                         <router-link v-bind:to="{name: 'ctInvoiceView', params: {id: ctInvoice.id}}">

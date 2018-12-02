@@ -77,32 +77,35 @@ th, td {
 
     <!-- ========CUSTOMER INFO======== -->
     <div class="row invoice-info">
-      <div class="col-sm-4 invoice-col">
+      <div class="col-sm-5 invoice-col">
         <address>
-          <strong>Customer Info</strong>
+          <strong>Vendor Info</strong>
+          <br>
+          <b>Company Name:</b>
+          <span>{{form.vendor.vendor_company_name}}</span>
           <br>
           <b>Name:</b>
-          <span>{{form.customer.customer_name}}</span>
+          <span>{{form.vendor.vendor_person_name}}</span>
           <br>
           <b>Address:</b>
-          <span>{{form.customer.customer_office_address}}</span>
+          <span>{{form.vendor.vendor_address}}</span>
           <br>
           <b>Phone:</b>
-          <span>{{form.customer.customer_contact}}</span>
+          <span>{{form.vendor.vendor_contact}}</span>
           <br>
           <b>Email:</b>
-          <span>{{form.customer.customer_email}}</span>
+          <span>{{form.vendor.vendor_email}}</span>
         </address>
       </div>
       <!-- /.col -->
-      <div class="col-sm-4 invoice-col" style="text-align: center; margin-top: 90px;"><h2>INVOICE</h2></div>
+      <div class="col-sm-2 invoice-col" style="text-align: center; margin-top: 90px;"><h2>INVOICE</h2></div>
       <!-- /.col -->
-      <div class="col-sm-4 invoice-col">
+      <div class="col-sm-5 invoice-col" style="text-align: center;">
         <b>Invoice No:</b>
-        <span>{{form.ct_invoice_no}}</span>
+        <span>{{form.ticket_invoice_no}}</span>
         <br>
         <b>Invoice Date:</b>
-        <span>{{form.ct_invoice_date | myDate }}</span>
+        <span>{{form.ticket_invoice_date | myDate }}</span>
         <br>
       </div>
       <!-- /.col -->
@@ -125,15 +128,15 @@ th, td {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(ctInvoiceItem, key) in form.ct_invoice_items" :key="key">
-              <td>{{ctInvoiceItem.ct_passenger_name}}</td>
-              <td>{{ctInvoiceItem.ct_ticket_no}}</td>
-              <td>{{ctInvoiceItem.ct_flight_no}}</td>
-              <td>{{ctInvoiceItem.ct_departure_date}}</td>
-              <td>{{ctInvoiceItem.ct_sector}}</td>
-              <td>{{formatPrice(ctInvoiceItem.ct_fares)}}</td>
-              <td>{{formatPrice(ctInvoiceItem.ct_total_tax_breakup)}}</td>
-              <td>{{formatPrice(ctInvoiceItem.ct_sub_total)}}</td>
+            <tr v-for="(ticketInvoiceItem, key) in form.ticket_invoice_items" :key="key">
+              <td>{{ticketInvoiceItem.passenger_name}}</td>
+              <td>{{ticketInvoiceItem.ticket_no}}</td>
+              <td>{{ticketInvoiceItem.flight_no}}</td>
+              <td>{{ticketInvoiceItem.departure_date}}</td>
+              <td>{{ticketInvoiceItem.sector}}</td>
+              <td>{{formatPrice(ticketInvoiceItem.fares)}}</td>
+              <td>{{formatPrice(ticketInvoiceItem.total_tax_breakup)}}</td>
+              <td>{{formatPrice(ticketInvoiceItem.sub_total)}}</td>
             </tr>
           </tbody>
         </table>
@@ -150,35 +153,35 @@ th, td {
         <p class="lead">Taxes Break Up</p>
         <small class="text-muted well well-sm no-shadow" style="margin-top: 10px;">
           <strong>Tax SB:</strong>
-          <span>{{formatPrice(form.ct_invoice_total_tax_SB)}}</span>
+          <span>{{formatPrice(form.ticket_invoice_total_tax_SB)}}</span>
           <strong>Tax SRP:</strong>
-          <span>{{formatPrice(form.ct_invoice_total_tax_SRP)}}</span>
+          <span>{{formatPrice(form.ticket_invoice_total_tax_SRP)}}</span>
           <strong>Tax YQ:</strong>
-          <span>{{formatPrice(form.ct_invoice_total_tax_YQ)}}</span>
+          <span>{{formatPrice(form.ticket_invoice_total_tax_YQ)}}</span>
           <strong>Tax RG:</strong>
-          <span>{{formatPrice(form.ct_invoice_total_tax_RG)}}</span>
+          <span>{{formatPrice(form.ticket_invoice_total_tax_RG)}}</span>
           <strong>Tax PK:</strong>
-          <span>{{formatPrice(form.ct_invoice_total_tax_PK)}}</span>
+          <span>{{formatPrice(form.ticket_invoice_total_tax_PK)}}</span>
           <strong>Tax YR:</strong>
-          <span>{{formatPrice(form.ct_invoice_total_tax_YR)}}</span>
+          <span>{{formatPrice(form.ticket_invoice_total_tax_YR)}}</span>
           <br>
           <strong>Tax SF:</strong>
-          <span>{{formatPrice(form.ct_invoice_total_tax_SF)}}</span>
+          <span>{{formatPrice(form.ticket_invoice_total_tax_SF)}}</span>
           <strong>Tax PTT:</strong>
-          <span>{{formatPrice(form.ct_invoice_total_tax_PTT)}}</span>
+          <span>{{formatPrice(form.ticket_invoice_total_tax_PTT)}}</span>
           <strong>Tax OAS:</strong>
-          <span>{{formatPrice(form.ct_invoice_total_tax_OAS)}}</span>
+          <span>{{formatPrice(form.ticket_invoice_total_tax_OAS)}}</span>
           <strong>Tax PSF:</strong>
-          <span>{{formatPrice(form.ct_invoice_total_tax_PSF)}}</span>
+          <span>{{formatPrice(form.ticket_invoice_total_tax_PSF)}}</span>
           <strong>Tax PB:</strong>
-          <span>{{formatPrice(form.ct_invoice_total_tax_PB)}}</span>
+          <span>{{formatPrice(form.ticket_invoice_total_tax_PB)}}</span>
           <strong>Tax OAD:</strong>
-          <span>{{formatPrice(form.ct_invoice_total_tax_OAD)}}</span>
+          <span>{{formatPrice(form.ticket_invoice_total_tax_OAD)}}</span>
         </small>
         <p class="lead">
           <small class="text-muted well well-sm no-shadow">
             <strong>Amount in words:</strong>
-            <span style="text-transform: capitalize;">{{form.ct_invoice_grand_total | toWords}} rupees only.</span>
+            <span style="text-transform: capitalize;">{{form.ticket_invoice_grand_total | toWords}} rupees only.</span>
           </small>
         </p>
       </div>
@@ -190,15 +193,15 @@ th, td {
             <tbody>
               <tr>
                 <th>Total Fares</th>
-                <td>{{formatPrice(form.ct_invoice_fares_total)}}</td>
+                <td>{{formatPrice(form.ticket_invoice_fares_total)}}</td>
               </tr>
               <tr>
                 <th>Total Taxes</th>
-                <td>{{formatPrice(form.ct_invoice_taxes_grand_total)}}</td>
+                <td>{{formatPrice(form.ticket_invoice_taxes_grand_total)}}</td>
               </tr>
               <tr>
                 <th>Grand Total</th>
-                <td>{{formatPrice(form.ct_invoice_grand_total)}}</td>
+                <td>{{formatPrice(form.ticket_invoice_grand_total)}}</td>
               </tr>
             </tbody>
           </table>
@@ -227,7 +230,7 @@ th, td {
         <a href="#" @click.prevent="printMe" target="_blank" class="btn btn-default float-right">
           <i class="fa fa-print"></i> Print
         </a>
-        <router-link to="/ct-invoices" class="btn btn-success float-left">
+        <router-link to="/ticket-invoices" class="btn btn-success float-left">
           <i class="fas fa-backspace"></i> Back
         </router-link>
         <a
@@ -250,57 +253,57 @@ import html2pdf from 'html2pdf.js'
 export default {
   data() {
     return {
-      ctInvoices: {},
+      ticketInvoices: {},
       id: {},
-      customers: null,
+      vendors: null,
       form: new Form({
         id: "",
-        customer_id: "",
-        ct_invoice_no: "",
-        ct_invoice_date: "",
-        ct_invoice_fares_total: "",
-        ct_invoice_taxes_grand_total: "",
-        ct_invoice_grand_total: "",
-        ct_invoice_grand_total_words: "",
-        ct_invoice_terms: "",
+        vendor_id: "",
+        ticket_invoice_no: "",
+        ticket_invoice_date: "",
+        ticket_invoice_fares_total: "",
+        ticket_invoice_taxes_grand_total: "",
+        ticket_invoice_grand_total: "",
+        ticket_invoice_grand_total_words: "",
+        ticket_invoice_terms: "",
 
-        ct_invoice_total_tax_SB: 0,
-        ct_invoice_total_tax_SRP: 0,
-        ct_invoice_total_tax_YQ: 0,
-        ct_invoice_total_tax_RG: 0,
-        ct_invoice_total_tax_PK: 0,
-        ct_invoice_total_tax_YR: 0,
-        ct_invoice_total_tax_SF: 0,
-        ct_invoice_total_tax_PTT: 0,
-        ct_invoice_total_tax_OAS: 0,
-        ct_invoice_total_tax_PSF: 0,
-        ct_invoice_total_tax_PB: 0,
-        ct_invoice_total_tax_OAD: 0,
+        ticket_invoice_total_tax_SB: 0,
+        ticket_invoice_total_tax_SRP: 0,
+        ticket_invoice_total_tax_YQ: 0,
+        ticket_invoice_total_tax_RG: 0,
+        ticket_invoice_total_tax_PK: 0,
+        ticket_invoice_total_tax_YR: 0,
+        ticket_invoice_total_tax_SF: 0,
+        ticket_invoice_total_tax_PTT: 0,
+        ticket_invoice_total_tax_OAS: 0,
+        ticket_invoice_total_tax_PSF: 0,
+        ticket_invoice_total_tax_PB: 0,
+        ticket_invoice_total_tax_OAD: 0,
 
-        ctInvoiceItems: [
+        ticketInvoiceItems: [
           {
             id: "",
-            ct_invoice_id: "",
-            ct_passenger_name: "",
-            ct_ticket_no: "",
-            ct_flight_no: "",
-            ct_departure_date: "",
-            ct_sector: "",
-            ct_tax_SB: "",
-            ct_tax_SRP: "",
-            ct_tax_YQ: "",
-            ct_tax_RG: "",
-            ct_tax_PK: "",
-            ct_tax_YR: "",
-            ct_tax_SF: "",
-            ct_tax_PTT: "",
-            ct_tax_OAS: "",
-            ct_tax_PSF: "",
-            ct_tax_PB: "",
-            ct_tax_OAD: "",
-            ct_fares: "",
-            ct_total_tax_breakup: "",
-            ct_sub_total: ""
+            ticket_invoice_id: "",
+            passenger_name: "",
+            ticket_no: "",
+            flight_no: "",
+            departure_date: "",
+            sector: "",
+            tax_SB: "",
+            tax_SRP: "",
+            tax_YQ: "",
+            tax_RG: "",
+            tax_PK: "",
+            tax_YR: "",
+            tax_SF: "",
+            tax_PTT: "",
+            tax_OAS: "",
+            tax_PSF: "",
+            tax_PB: "",
+            tax_OAD: "",
+            fares: "",
+            total_tax_breakup: "",
+            sub_total: ""
           }
         ]
       })
@@ -329,20 +332,20 @@ export default {
       let val = (value / 1).toFixed().replace(".", ",");
       return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); //75.674,00
     },
-  loadCustomers() {
+  loadVendors() {
     axios
-      .get("/api/customer")
-      .then(({ data }) => (this.customers = data.data));
+      .get("/api/vendor")
+      .then(({ data }) => (this.vendors = data.data));
   },
-  loadCtInvoices() {
+  loadTicketInvoices() {
     axios
-      .get("/api/ct-invoice")
-      .then(({ data }) => (this.ctInvoices = data.data));
+      .get("/api/ticket-invoice")
+      .then(({ data }) => (this.ticketInvoices = data.data));
   }
   },
   created: function() {
     axios
-      .get("/api/ct-invoice/" + this.$route.params.id)
+      .get("/api/ticket-invoice/" + this.$route.params.id)
       .then(({ data }) => {
         console.log(data);
         this.form = new Form(data);
@@ -352,13 +355,13 @@ export default {
       });
   },
   mounted() {
-    this.loadCtInvoices();
+    this.loadTicketInvoices();
     Fire.$on("RefreshTable", () => {
-      this.loadCtInvoices();
+      this.loadTicketInvoices();
     });
-    this.loadCustomers();
+    this.loadVendors();
     Fire.$on("RefreshTable", () => {
-      this.loadCustomers();
+      this.loadVendors();
     });
   }
 };

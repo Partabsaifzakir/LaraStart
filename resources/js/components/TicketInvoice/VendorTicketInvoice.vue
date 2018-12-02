@@ -34,7 +34,7 @@
 
                 <div class="card-tools">
                     <button class="btn btn-default" style="background-color: transparent;" @click="newModel">
-                        <i class="fas fa-user-plus fa-2x text-green"></i>
+                        <i class="fas fa-plus fa-2x text-green"></i>
                     </button>       
                 </div>
               </div>
@@ -57,12 +57,16 @@
                     <td>{{ formatPrice(ticketInvoice.ticket_invoice_grand_total) }}</td>
                     <td>
                         <a href="#" @click="editModel(ticketInvoice)">
-                            <i class="fas fa-user-edit fa-lg text-orange"></i>
+                            <i class="fas fa-edit fa-lg text-orange"></i>
                         </a>
                         &nbsp;
                         <a href="#">
-                            <i class="fas fa-user-times fa-lg text-red"></i>
+                            <i class="fas fa-times fa-lg text-red"></i>
                         </a>
+                        &nbsp;
+                        <router-link v-bind:to="{name: 'ticketInvoiceView', params: {id: ticketInvoice.id}}">
+                            <i class="fas fa-eye fa-lg text-blue"></i>
+                        </router-link>
                     </td>
                   </tr>
                 </tbody></table>
